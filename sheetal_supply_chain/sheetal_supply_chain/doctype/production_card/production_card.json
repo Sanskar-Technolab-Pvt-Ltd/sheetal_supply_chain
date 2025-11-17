@@ -1,0 +1,330 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "PC-.YY.-.#####",
+ "creation": "2025-10-03 12:01:01.210556",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_0cvr",
+  "production_card_type",
+  "work_order",
+  "amended_from",
+  "column_break_ltuz",
+  "posting_date",
+  "production_team_tab",
+  "floor_head",
+  "mix_handling_and_freezer",
+  "sticker_station",
+  "mould_extract",
+  "inspection_line_1",
+  "packing_mc_op_1",
+  "weight_checked_by",
+  "outer_maker_1",
+  "packer_1",
+  "biscuit_load",
+  "box_packing",
+  "column_break_mtpl",
+  "supervisor",
+  "filling_1",
+  "sticker_inserter",
+  "chocolate_tank_filler",
+  "inspection_line_2",
+  "packing_mc_op_2",
+  "shifter",
+  "outer_maker_2",
+  "packer_2",
+  "sleeve_loading",
+  "lid_placing",
+  "column_break_mxup",
+  "operator",
+  "filling_2",
+  "sticker_loader",
+  "inspection_line_3",
+  "piece_count_by_1",
+  "piece_count_by_2",
+  "piece_count_by_3",
+  "outer_maker_3",
+  "packer_3",
+  "packing",
+  "cup_loading",
+  "section_break_tunl",
+  "production_card_workers",
+  "bakery_operations",
+  "production_operations"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_0cvr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Production Card",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "production_card_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Production Card Type",
+   "options": "Production Card Type",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Work Order",
+   "options": "Work Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_ltuz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "production_team_tab",
+   "fieldtype": "Tab Break",
+   "label": "Production Team"
+  },
+  {
+   "fieldname": "floor_head",
+   "fieldtype": "Link",
+   "label": "Floor Head",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_mtpl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "supervisor",
+   "fieldtype": "Link",
+   "label": "Supervisor",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_mxup",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Link",
+   "label": "Operator",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "section_break_tunl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "production_card_workers",
+   "fieldtype": "Table",
+   "label": "Production Card Workers",
+   "options": "Production Card Workers"
+  },
+  {
+   "fieldname": "production_operations",
+   "fieldtype": "Table",
+   "label": "Operations",
+   "options": "Production Operations"
+  },
+  {
+   "fieldname": "bakery_operations",
+   "fieldtype": "Tab Break",
+   "label": "Operations"
+  },
+  {
+   "fieldname": "mix_handling_and_freezer",
+   "fieldtype": "Data",
+   "label": "Mix Handling and Freezer"
+  },
+  {
+   "fieldname": "sticker_station",
+   "fieldtype": "Data",
+   "label": "Sticker Station"
+  },
+  {
+   "fieldname": "mould_extract",
+   "fieldtype": "Data",
+   "label": "Mould Extract"
+  },
+  {
+   "fieldname": "inspection_line_1",
+   "fieldtype": "Data",
+   "label": "Inspection Line 1"
+  },
+  {
+   "fieldname": "packing_mc_op_1",
+   "fieldtype": "Data",
+   "label": "Packing Mc. Op. 1"
+  },
+  {
+   "fieldname": "filling_1",
+   "fieldtype": "Data",
+   "label": "Filling 1"
+  },
+  {
+   "fieldname": "sticker_inserter",
+   "fieldtype": "Data",
+   "label": "Sticker Inserter"
+  },
+  {
+   "fieldname": "chocolate_tank_filler",
+   "fieldtype": "Data",
+   "label": "Chocolate Tank Filler"
+  },
+  {
+   "fieldname": "inspection_line_2",
+   "fieldtype": "Data",
+   "label": "Inspection Line 2"
+  },
+  {
+   "fieldname": "packing_mc_op_2",
+   "fieldtype": "Data",
+   "label": "Packing Mc. Op. 2"
+  },
+  {
+   "fieldname": "filling_2",
+   "fieldtype": "Data",
+   "label": "Filling 2"
+  },
+  {
+   "fieldname": "sticker_loader",
+   "fieldtype": "Data",
+   "label": "Sticker Loader"
+  },
+  {
+   "fieldname": "inspection_line_3",
+   "fieldtype": "Data",
+   "label": "Inspection Line 3"
+  },
+  {
+   "fieldname": "weight_checked_by",
+   "fieldtype": "Data",
+   "label": "Weight Checked By"
+  },
+  {
+   "fieldname": "outer_maker_1",
+   "fieldtype": "Data",
+   "label": "Outer Maker 1"
+  },
+  {
+   "fieldname": "packer_1",
+   "fieldtype": "Data",
+   "label": "Packer 1"
+  },
+  {
+   "fieldname": "shifter",
+   "fieldtype": "Data",
+   "label": "Shifter"
+  },
+  {
+   "fieldname": "outer_maker_2",
+   "fieldtype": "Data",
+   "label": "Outer Maker 2"
+  },
+  {
+   "fieldname": "packer_2",
+   "fieldtype": "Data",
+   "label": "Packer 2"
+  },
+  {
+   "fieldname": "piece_count_by_1",
+   "fieldtype": "Data",
+   "label": "Piece Count By 1"
+  },
+  {
+   "fieldname": "piece_count_by_2",
+   "fieldtype": "Data",
+   "label": "Piece Count By 2"
+  },
+  {
+   "fieldname": "piece_count_by_3",
+   "fieldtype": "Data",
+   "label": "Piece Count By 3"
+  },
+  {
+   "fieldname": "outer_maker_3",
+   "fieldtype": "Data",
+   "label": "Outer Maker 3"
+  },
+  {
+   "fieldname": "packer_3",
+   "fieldtype": "Data",
+   "label": "Packer 3"
+  },
+  {
+   "fieldname": "biscuit_load",
+   "fieldtype": "Data",
+   "label": " Biscuit Load"
+  },
+  {
+   "fieldname": "box_packing",
+   "fieldtype": "Data",
+   "label": " Box Packing"
+  },
+  {
+   "fieldname": "sleeve_loading",
+   "fieldtype": "Data",
+   "label": " Sleeve Loading"
+  },
+  {
+   "fieldname": "packing",
+   "fieldtype": "Data",
+   "label": "Packing"
+  },
+  {
+   "fieldname": "lid_placing",
+   "fieldtype": "Data",
+   "label": "Lid Placing"
+  },
+  {
+   "fieldname": "cup_loading",
+   "fieldtype": "Data",
+   "label": "Cup Loading"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-10-09 16:18:09.725209",
+ "modified_by": "Administrator",
+ "module": "Sheetal Supply Chain",
+ "name": "Production Card",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

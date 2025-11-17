@@ -1,0 +1,421 @@
+{
+ "actions": [],
+ "allow_copy": 1,
+ "autoname": "MQLE-.YYYY.-.########",
+ "creation": "2025-09-23 16:52:29.043812",
+ "default_view": "List",
+ "doctype": "DocType",
+ "document_type": "Other",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "serial_no",
+  "item_name",
+  "posting_date",
+  "posting_time",
+  "column_break_bdsvl",
+  "warehouse",
+  "batch_no",
+  "voucher_type",
+  "voucher_no",
+  "voucher_detail_no",
+  "transaction_detail_section",
+  "actual_qty",
+  "fat_per",
+  "fat",
+  "qty_in_liter",
+  "column_break_6k5do",
+  "stock_uom",
+  "snf_per",
+  "snf",
+  "balance_detail_section",
+  "qty_after_transaction",
+  "fat_per_after_transaction",
+  "fat_after_transaction",
+  "column_break_il3gs",
+  "qty_after_transaction_in_liter",
+  "snf_per_after_transaction",
+  "snf_after_transaction",
+  "more_info_section",
+  "project",
+  "company",
+  "fiscal_year",
+  "is_loss_entry",
+  "is_gain_entry",
+  "column_break_waep7",
+  "loss_type",
+  "gain_type",
+  "is_cancelled",
+  "to_rename",
+  "is_opening",
+  "stock_queue"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Code",
+   "oldfieldname": "item_code",
+   "oldfieldtype": "Link",
+   "options": "Item",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Long Text",
+   "label": "Serial No",
+   "print_width": "100px",
+   "read_only": 1,
+   "width": "100px"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "oldfieldname": "posting_date",
+   "oldfieldtype": "Date",
+   "print_width": "100px",
+   "read_only": 1,
+   "search_index": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "Posting Time",
+   "oldfieldname": "posting_time",
+   "oldfieldtype": "Time",
+   "print_width": "100px",
+   "read_only": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "column_break_bdsvl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Warehouse",
+   "oldfieldname": "warehouse",
+   "oldfieldtype": "Link",
+   "options": "Warehouse",
+   "print_width": "100px",
+   "read_only": 1,
+   "search_index": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "batch_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Batch No",
+   "oldfieldname": "batch_no",
+   "oldfieldtype": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voucher_type",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "label": "Voucher Type",
+   "oldfieldname": "voucher_type",
+   "oldfieldtype": "Data",
+   "options": "DocType",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "voucher_no",
+   "fieldtype": "Dynamic Link",
+   "in_filter": 1,
+   "in_standard_filter": 1,
+   "label": "Voucher No",
+   "oldfieldname": "voucher_no",
+   "oldfieldtype": "Data",
+   "options": "voucher_type",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "voucher_detail_no",
+   "fieldtype": "Data",
+   "label": "Voucher Detail No",
+   "oldfieldname": "voucher_detail_no",
+   "oldfieldtype": "Data",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "transaction_detail_section",
+   "fieldtype": "Section Break",
+   "label": "Transaction Detail"
+  },
+  {
+   "fieldname": "actual_qty",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "label": "Actual Quantity",
+   "oldfieldname": "actual_qty",
+   "oldfieldtype": "Currency",
+   "precision": "4",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "fat_per",
+   "fieldtype": "Percent",
+   "label": "Fat %",
+   "precision": "4"
+  },
+  {
+   "fieldname": "fat",
+   "fieldtype": "Float",
+   "label": "Fat (in Kg)",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qty_in_liter",
+   "fieldtype": "Float",
+   "label": "Qty in Liter",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_6k5do",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stock_uom",
+   "fieldtype": "Link",
+   "label": "Stock UOM",
+   "oldfieldname": "stock_uom",
+   "oldfieldtype": "Data",
+   "options": "UOM",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "snf_per",
+   "fieldtype": "Percent",
+   "label": "SNF %",
+   "precision": "4"
+  },
+  {
+   "fieldname": "snf",
+   "fieldtype": "Float",
+   "label": "SNF/CLR (in Kg)",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "balance_detail_section",
+   "fieldtype": "Section Break",
+   "label": "Balance Detail"
+  },
+  {
+   "fieldname": "qty_after_transaction",
+   "fieldtype": "Float",
+   "in_filter": 1,
+   "label": "Actual Qty After Transaction",
+   "oldfieldname": "bin_aqat",
+   "oldfieldtype": "Currency",
+   "precision": "4",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "fat_per_after_transaction",
+   "fieldtype": "Float",
+   "label": "FAT % After Transaction",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fat_after_transaction",
+   "fieldtype": "Float",
+   "label": "FAT After Transaction (in Kg)",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_il3gs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qty_after_transaction_in_liter",
+   "fieldtype": "Float",
+   "label": "Qty After Transaction in Liter",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf_per_after_transaction",
+   "fieldtype": "Float",
+   "label": "SNF % After Transaction",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snf_after_transaction",
+   "fieldtype": "Float",
+   "label": "SNF/CLR After Transaction (in Kg)",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "more_info_section",
+   "fieldtype": "Section Break",
+   "label": "More info"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "label": "Company",
+   "oldfieldname": "company",
+   "oldfieldtype": "Data",
+   "options": "Company",
+   "print_width": "150px",
+   "read_only": 1,
+   "search_index": 1,
+   "width": "150px"
+  },
+  {
+   "fieldname": "fiscal_year",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "label": "Fiscal Year",
+   "oldfieldname": "fiscal_year",
+   "oldfieldtype": "Data",
+   "print_width": "150px",
+   "read_only": 1,
+   "width": "150px"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_loss_entry",
+   "fieldtype": "Check",
+   "label": "Is Loss Entry",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_gain_entry",
+   "fieldtype": "Check",
+   "label": "Is Gain Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_waep7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "loss_type",
+   "fieldtype": "Select",
+   "label": "Loss Type",
+   "options": "\nBulk Milk Sale\nManufacturing Process Loss",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gain_type",
+   "fieldtype": "Select",
+   "label": "Gain Type",
+   "options": "\nBulk Milk Sale\nManufacturing Gain",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_cancelled",
+   "fieldtype": "Check",
+   "label": "Is Cancelled",
+   "report_hide": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "to_rename",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "To Rename",
+   "search_index": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_opening",
+   "fieldtype": "Check",
+   "label": "Is Opening",
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_queue",
+   "fieldtype": "Text",
+   "label": "FIFO Stock Queue (qty, rate)",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "hide_toolbar": 1,
+ "icon": "fa fa-list",
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-09-24 13:13:38.699254",
+ "modified_by": "Administrator",
+ "module": "Sheetal Supply Chain",
+ "name": "Milk Quality Ledger Entry",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User"
+  },
+  {
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

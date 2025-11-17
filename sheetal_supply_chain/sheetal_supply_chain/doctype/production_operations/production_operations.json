@@ -1,0 +1,448 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-03 12:14:41.736202",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "operation",
+  "dividing_moulding_section",
+  "weight_of_piece",
+  "column_break_zfmf",
+  "dough_weight_consistency",
+  "column_break_dpez",
+  "uniform_shape",
+  "proofing_holding_section",
+  "proofing_holding_time",
+  "column_break_rtmm",
+  "proofing_holding_temp",
+  "column_break_hbfr",
+  "humidity",
+  "first_backing_section",
+  "first_baking_time",
+  "column_break_gtje",
+  "first_backing_temp",
+  "cooling_section",
+  "cooling_time",
+  "column_break_ykqt",
+  "cooling_temp",
+  "slicing_section",
+  "slicing_shape",
+  "column_break_mebk",
+  "slicing_dimension",
+  "second_backing_section",
+  "second_baking_time",
+  "column_break_lbha",
+  "second_backing_temp",
+  "final_cooling_section",
+  "final_cooling_time",
+  "column_break_kfgv",
+  "final_cooling_temp",
+  "mixing_and_cooking_section",
+  "mixing_time",
+  "column_break_nghv",
+  "mix_temp",
+  "column_break_yuyp",
+  "brix_value",
+  "column_break_gonx",
+  "ph",
+  "filtration_and_pasteurization_section",
+  "filter_mesh_size",
+  "column_break_qias",
+  "pasteurization_temp",
+  "column_break_kzxb",
+  "holding_time",
+  "column_break_wpzj",
+  "cooling_temperature",
+  "ageing_section",
+  "ageing_time",
+  "column_break_itou",
+  "ageing_temp",
+  "filling_and_stick_insertion_section",
+  "mould_temp",
+  "column_break_ovnv",
+  "filling_weight",
+  "column_break_jbwl",
+  "stick_position",
+  "freezing_section",
+  "brine_temp",
+  "column_break_cnvu",
+  "freezing_time",
+  "column_break_vqqp",
+  "product_core_temp",
+  "demoulding_and_coating_section",
+  "thawing_temp",
+  "column_break_qfwc",
+  "demoulding_yield",
+  "column_break_tyyf",
+  "coating_thickness"
+ ],
+ "fields": [
+  {
+   "fieldname": "operation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Operation",
+   "options": "Operation"
+  },
+  {
+   "fieldname": "weight_of_piece",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Weight of Piece"
+  },
+  {
+   "fieldname": "dough_weight_consistency",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Dough Weight Consistency"
+  },
+  {
+   "fieldname": "uniform_shape",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Uniform Shape"
+  },
+  {
+   "fieldname": "column_break_zfmf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_dpez",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Dividing & Moulding'",
+   "fieldname": "dividing_moulding_section",
+   "fieldtype": "Section Break",
+   "label": "Dividing & Moulding"
+  },
+  {
+   "fieldname": "column_break_rtmm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_hbfr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "humidity",
+   "fieldtype": "Data",
+   "label": "Humidity"
+  },
+  {
+   "fieldname": "proofing_holding_temp",
+   "fieldtype": "Data",
+   "label": "Proofing / Holding Temperature"
+  },
+  {
+   "fieldname": "proofing_holding_time",
+   "fieldtype": "Data",
+   "label": "Proofing / Holding Time"
+  },
+  {
+   "depends_on": "eval:doc.operation=='First Backing'",
+   "fieldname": "first_backing_section",
+   "fieldtype": "Section Break",
+   "label": "First Backing"
+  },
+  {
+   "fieldname": "first_baking_time",
+   "fieldtype": "Data",
+   "label": "First Baking Time"
+  },
+  {
+   "fieldname": "column_break_gtje",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "first_backing_temp",
+   "fieldtype": "Data",
+   "label": "First Backing Temperature"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Cooling'",
+   "fieldname": "cooling_section",
+   "fieldtype": "Section Break",
+   "label": "Cooling"
+  },
+  {
+   "fieldname": "cooling_time",
+   "fieldtype": "Data",
+   "label": "Cooling Time"
+  },
+  {
+   "fieldname": "column_break_ykqt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cooling_temp",
+   "fieldtype": "Data",
+   "label": "Cooling Temperature"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Slicing'",
+   "fieldname": "slicing_section",
+   "fieldtype": "Section Break",
+   "label": "Slicing"
+  },
+  {
+   "fieldname": "slicing_shape",
+   "fieldtype": "Data",
+   "label": "Slicing Shape"
+  },
+  {
+   "fieldname": "column_break_mebk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "slicing_dimension",
+   "fieldtype": "Data",
+   "label": "Slicing Dimension"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Second Backing'",
+   "fieldname": "second_backing_section",
+   "fieldtype": "Section Break",
+   "label": "Second Backing"
+  },
+  {
+   "fieldname": "second_baking_time",
+   "fieldtype": "Data",
+   "label": "Second Baking Time"
+  },
+  {
+   "fieldname": "column_break_lbha",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "second_backing_temp",
+   "fieldtype": "Data",
+   "label": "Second Backing Temperature"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Final Cooling'",
+   "fieldname": "final_cooling_section",
+   "fieldtype": "Section Break",
+   "label": "Final Cooling"
+  },
+  {
+   "fieldname": "final_cooling_time",
+   "fieldtype": "Data",
+   "label": "Final Cooling Time"
+  },
+  {
+   "fieldname": "column_break_kfgv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "final_cooling_temp",
+   "fieldtype": "Data",
+   "label": "Final Cooling Temperature"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Proofing / Holding'",
+   "fieldname": "proofing_holding_section",
+   "fieldtype": "Section Break",
+   "label": "Proofing / Holding"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Mixing & Cooking'",
+   "fieldname": "mixing_and_cooking_section",
+   "fieldtype": "Section Break",
+   "label": "Mixing & Cooking"
+  },
+  {
+   "fieldname": "mixing_time",
+   "fieldtype": "Data",
+   "label": "Mixing Time"
+  },
+  {
+   "fieldname": "column_break_nghv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mix_temp",
+   "fieldtype": "Data",
+   "label": "Mix Temp"
+  },
+  {
+   "fieldname": "column_break_yuyp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "brix_value",
+   "fieldtype": "Data",
+   "label": "Brix Value"
+  },
+  {
+   "fieldname": "column_break_gonx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ph",
+   "fieldtype": "Data",
+   "label": "pH"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Filtration & Pasteurization'",
+   "fieldname": "filtration_and_pasteurization_section",
+   "fieldtype": "Section Break",
+   "label": "Filtration & Pasteurization"
+  },
+  {
+   "fieldname": "filter_mesh_size",
+   "fieldtype": "Data",
+   "label": "Filter Mesh Size"
+  },
+  {
+   "fieldname": "column_break_qias",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pasteurization_temp",
+   "fieldtype": "Data",
+   "label": "Pasteurization Temp"
+  },
+  {
+   "fieldname": "column_break_kzxb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "holding_time",
+   "fieldtype": "Data",
+   "label": "Holding Time"
+  },
+  {
+   "fieldname": "column_break_wpzj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cooling_temperature",
+   "fieldtype": "Data",
+   "label": "Cooling Temperature"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Ageing'",
+   "fieldname": "ageing_section",
+   "fieldtype": "Section Break",
+   "label": "Ageing"
+  },
+  {
+   "fieldname": "ageing_time",
+   "fieldtype": "Data",
+   "label": "Ageing Time"
+  },
+  {
+   "fieldname": "column_break_itou",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ageing_temp",
+   "fieldtype": "Data",
+   "label": "Ageing Temp"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Filling & Stick Insertion'",
+   "fieldname": "filling_and_stick_insertion_section",
+   "fieldtype": "Section Break",
+   "label": "Filling & Stick Insertion"
+  },
+  {
+   "fieldname": "mould_temp",
+   "fieldtype": "Data",
+   "label": "Mould Temp"
+  },
+  {
+   "fieldname": "column_break_ovnv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "filling_weight",
+   "fieldtype": "Data",
+   "label": "Filling Weight"
+  },
+  {
+   "fieldname": "column_break_jbwl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stick_position",
+   "fieldtype": "Data",
+   "label": "Stick Position"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Freezing'",
+   "fieldname": "freezing_section",
+   "fieldtype": "Section Break",
+   "label": "Freezing"
+  },
+  {
+   "fieldname": "brine_temp",
+   "fieldtype": "Data",
+   "label": "Brine Temp"
+  },
+  {
+   "fieldname": "column_break_cnvu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "freezing_time",
+   "fieldtype": "Data",
+   "label": "Freezing Time"
+  },
+  {
+   "fieldname": "column_break_vqqp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "product_core_temp",
+   "fieldtype": "Data",
+   "label": "Product Core Temp"
+  },
+  {
+   "depends_on": "eval:doc.operation=='Demoulding & Coating'",
+   "fieldname": "demoulding_and_coating_section",
+   "fieldtype": "Section Break",
+   "label": "Demoulding & Coating"
+  },
+  {
+   "fieldname": "thawing_temp",
+   "fieldtype": "Data",
+   "label": "Thawing Temp"
+  },
+  {
+   "fieldname": "column_break_qfwc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "demoulding_yield",
+   "fieldtype": "Data",
+   "label": "Demoulding Yield"
+  },
+  {
+   "fieldname": "column_break_tyyf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "coating_thickness",
+   "fieldtype": "Data",
+   "label": "Coating Thickness"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-07 16:24:40.586546",
+ "modified_by": "Administrator",
+ "module": "Sheetal Supply Chain",
+ "name": "Production Operations",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
