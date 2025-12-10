@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-10 11:57:26.564020",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "milk_type",
+  "effective_from",
+  "is_default",
+  "column_break_ccmt",
+  "baseline_fat_",
+  "baseline_snf_",
+  "base_rate"
+ ],
+ "fields": [
+  {
+   "fieldname": "milk_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Milk Type",
+   "options": "Milk Type"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective From"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Default"
+  },
+  {
+   "fieldname": "column_break_ccmt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "baseline_fat_",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Baseline FAT %"
+  },
+  {
+   "fieldname": "baseline_snf_",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Baseline SNF %"
+  },
+  {
+   "fieldname": "base_rate",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Base Rate"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-12-10 12:00:04.647382",
+ "modified_by": "Administrator",
+ "module": "Sheetal Supply Chain",
+ "name": "Supplier Milk Profile",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

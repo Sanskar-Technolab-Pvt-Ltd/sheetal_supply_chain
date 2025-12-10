@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class MilkQualityLedger(Document):
+class SupplierMilkProfile(Document):
 	pass
