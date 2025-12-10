@@ -16,91 +16,33 @@ frappe.ui.form.on("Purchase Receipt", {
         }
     },
 
-    // refresh(frm) {
-    //     // Auto fetch when QI is auto-linked after submission
-    //     frm.doc.items.forEach(item => {
-    //         if (
-    //             item.quality_inspection && 
-    //             (!item.custom_fat || !item.custom_snf)
-    //         ) {
-    //             fetch_fat_snf(frm, item.doctype, item.name);
-    //         }
-    //     });
-    // },
 
-// refresh(frm) {
-//     // Check server-side QI after cancel/amend
-//     frappe.call({
-//         method: "frappe.client.get",
-//         args: {
-//             doctype: frm.doc.doctype,
-//             name: frm.doc.name
-//         },
-//         callback(r) {
-//             if (!r.message) return;
-//             let server_items = r.message.items;
-
-//             server_items.forEach(s_item => {
-//                 let l_item = frm.doc.items.find(i => i.name === s_item.name);
-//                 if (!l_item) return;
-
-//                 // QI changed in DB but not on form
-//                 if (s_item.quality_inspection !== l_item.quality_inspection) {
-
-//                     // 1️⃣ Update QI in database (no dirty state)
-//                     frappe.db.set_value(
-//                         "Purchase Receipt Item",
-//                         l_item.name,
-//                         "quality_inspection",
-//                         s_item.quality_inspection
-//                     );
-
-//                     // 2️⃣ Update UI value → triggers your field event
-//                     frappe.model.set_value(
-//                         "Purchase Receipt Item",
-//                         l_item.name,
-//                         "quality_inspection",
-//                         s_item.quality_inspection
-//                     );
-//                 }
-//             });
-//         }
-//     });
-// },
-
-
-refresh(frm) {
-    // Update all items with QI on form load
-    frm.doc.items.forEach(item => {
-        if (item.quality_inspection) {
-            fetch_fat_snf(frm, item.doctype, item.name);
-        }
-    });
-},
-// NEW: Also refresh when returning to form
-onload(frm) {
-    if (frm.doc.__islocal) return; // Skip for new documents
-    frm.doc.items.forEach(item => {
-        if (item.quality_inspection) {
-            fetch_fat_snf(frm, item.doctype, item.name);
-        }
-    });
-}
-
+    refresh(frm) {
+        // Update all items with QI on form load
+        frm.doc.items.forEach(item => {
+            if (item.quality_inspection) {
+                fetch_fat_snf(frm, item.doctype, item.name);
+            }
+        });
+    },
+    onload(frm) {
+        if (frm.doc.__islocal) return; // Skip for new documents
+        frm.doc.items.forEach(item => {
+            if (item.quality_inspection) {
+                fetch_fat_snf(frm, item.doctype, item.name);
+            }
+        });
+    }
 
 });
 
 
 
 frappe.ui.form.on("Purchase Receipt Item", {
-    // quality_inspection(frm, cdt, cdn) {
-    //     fetch_fat_snf(frm, cdt, cdn);
-    // }
 
     quality_inspection(frm, cdt, cdn) {
         fetch_fat_snf(frm, cdt, cdn);
     },
-    // IMPORTANT: Also trigger on form render (when QI is auto-linked)
     form_render(frm, cdt, cdn) {
         let row = locals[cdt][cdn];
         if (row.quality_inspection) {

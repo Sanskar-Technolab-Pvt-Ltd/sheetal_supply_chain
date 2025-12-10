@@ -11,31 +11,8 @@ frappe.ui.form.on("Quality Inspection", {
             };
         });
 
-
-        //for item_code filter based on warehouse
-        
-        // frm.set_query("item_code", function(doc) {
-        //     if (!doc.custom_warehouse) {
-        //         return {
-        //             filters: {
-        //                 name: ["is", "set", ""]
-        //             }
-        //         };
-        //     }
-
-        //     return {
-        //         query: "sheetal_supply_chain.py.quality_inspection.get_items_with_stock",
-        //         filters: {
-        //             warehouse: doc.custom_warehouse
-        //         }
-        //     };
-        // });
     },
 
-    // custom_warehouse(frm) {
-    //     frm.set_value("item_code", "");
-    //     frm.refresh_field("item_code");
-    // }
  
 });
 
