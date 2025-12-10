@@ -43,7 +43,13 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Purchase Receipt" : "public/js/purchase_receipt.js",
+    "Quality Inspection" : "public/js/quality_inspection.js",
+    "Stock Entry" : "public/js/stock_entry.js",
+
+
+    }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -145,6 +151,32 @@ app_license = "mit"
 # 	}
 # }
 
+doc_events = {
+	"Quality Inspection": {
+		"on_update": "sheetal_supply_chain.py.quality_inspection.qi_reading",
+		"on_submit": "sheetal_supply_chain.py.quality_inspection.create_mqle_on_qi_submit",
+		"on_cancel": "sheetal_supply_chain.py.quality_inspection.cancel_mqle_on_qi_cancel",
+  
+
+	},
+ "Purchase Receipt": {
+		"validate": "sheetal_supply_chain.py.purchase_receipt.validate_purchase_receipt",
+		"on_submit": "sheetal_supply_chain.py.purchase_receipt.create_mqle_on_pr_submit",
+  		"on_cancel": "sheetal_supply_chain.py.purchase_receipt.cancel_mqle_on_pr_cancel",
+      "validate": "sheetal_supply_chain.py.purchase_receipt.set_milk_pricing_on_items",
+	},
+
+	 "Stock Entry": {
+		"on_submit": ["sheetal_supply_chain.py.stock_entry.create_mqle_on_se_submit",
+						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials",
+						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials_issue",
+                	],
+    		"on_cancel": "sheetal_supply_chain.py.stock_entry.cancel_mqle_on_se_cancel",
+	},
+
+
+}
+
 # Scheduled Tasks
 # ---------------
 
@@ -178,6 +210,11 @@ app_license = "mit"
 # 	"frappe.desk.doctype.event.event.get_events": "sheetal_supply_chain.event.get_events"
 # }
 #
+# override_whitelisted_methods = {
+#     "erpnext.controllers.stock_controller.make_quality_inspections":
+#         "sheetal_supply_chain.overrides.qi_override.make_quality_inspections"
+# }
+
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
