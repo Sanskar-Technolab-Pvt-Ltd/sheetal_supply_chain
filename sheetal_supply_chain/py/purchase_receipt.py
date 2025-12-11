@@ -407,7 +407,7 @@ def set_milk_pricing_on_items(doc, method=None):
 
         res = get_milk_rate_for_pr_item(
             supplier=doc.supplier,
-            milk_type=item.custom_milk_type,
+            custom_milk_type=item.custom_milk_type,
             custom_fat=item.custom_fat,
             custom_snf=item.custom_snf,
             weight_kg=weight_kg,

@@ -24,6 +24,12 @@ frappe.ui.form.on("Purchase Receipt", {
                 fetch_fat_snf(frm, item.doctype, item.name);
             }
         });
+
+        if (frm.doc.docstatus === 1) {
+            frm.add_custom_button("Milk Ledger", function () {
+                open_milk_quality_ledger(frm);  
+            }, __("View"));
+        }
     },
     onload(frm) {
         if (frm.doc.__islocal) return; // Skip for new documents
@@ -83,3 +89,35 @@ function fetch_fat_snf(frm, cdt, cdn) {
     });
 }
  
+
+/**
+ * Redirects user to Milk Quality Ledger with auto-filled filters
+ * Safe for all edge cases
+ */
+function open_milk_quality_ledger(frm) {
+
+
+    // -------- 2) Mandatory Fields --------
+    if (!frm.doc.company) {
+        frappe.msgprint("Company is missing. Cannot open Milk Ledger.");
+        return;
+    }
+
+    if (!frm.doc.name) {
+        frappe.msgprint("Document name not found.");
+        return;
+    }
+
+    // -------- 3) Build Redirect URL (Manual + Safe) --------
+    const base_url = window.location.origin;  
+
+    let url = `${base_url}/desk/query-report/Milk%20Quality%20Ledger`
+        + `?company=${encodeURIComponent(frm.doc.company)}`
+        + `&from_date=${frm.doc.posting_date}`
+        + `&to_date=${frm.doc.posting_date}`
+        + `&voucher_type=${encodeURIComponent("Purchase Receipt")}`
+        + `&voucher_no=${encodeURIComponent(frm.doc.name)}`;
+
+    // -------- 4) Redirect --------
+    window.location.href = url;
+}
