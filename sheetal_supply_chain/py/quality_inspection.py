@@ -1,4 +1,6 @@
 import frappe
+
+
 def qi_reading(doc, method):
     for row in doc.readings:
         if not row.numeric:
@@ -249,8 +251,8 @@ def create_mqle_on_qi_submit(doc, method=None):
     qty_in_litre = stock_qty / conversion_factor if stock_uom != included_uom else stock_qty
 
     # Calculate fat and snf
-    fat = fat_per * stock_qty
-    snf = snf_per * stock_qty
+    fat = (fat_per/100) * stock_qty
+    snf = (snf_per/100) * stock_qty
 
     # Create MQLE document
     mqle = frappe.new_doc("Milk Quality Ledger Entry")
@@ -274,8 +276,11 @@ def create_mqle_on_qi_submit(doc, method=None):
     mqle.fat = fat
     mqle.snf = snf
 
-    mqle.qty_in_kg = stock_qty
     mqle.qty_in_liter = qty_in_litre
+    mqle.qty_in_kg = stock_qty
+
+    mqle.qty_after_transaction_in_liter = qty_in_litre
+    mqle.qty_after_transaction_in_kg = stock_qty
 
     mqle.save(ignore_permissions=True)
     mqle.submit()
@@ -314,54 +319,24 @@ def cancel_mqle_on_qi_cancel(doc, method=None):
 
 
 
-# @frappe.whitelist()
-# def get_items_with_stock(doctype, txt, searchfield, start, page_len, filters):
-#     warehouse = filters.get("warehouse")
-#     if not warehouse:
-#         return []
+@frappe.whitelist()
+def get_items_from_warehouse(doctype, txt, searchfield, start, page_len, filters):
+    warehouse = filters.get("warehouse")
 
-#     # Fetch items having stock > 0 in this warehouse
-#     items = frappe.db.sql("""
-#         SELECT 
-#             item_code, item_name
-#         FROM 
-#             `tabBin`
-#         WHERE 
-#             warehouse = %s
-#             AND actual_qty > 0
-#             AND item_code LIKE %s
-#         ORDER BY 
-#             item_code
-#         LIMIT %s OFFSET %s
-#     """, (warehouse, "%" + txt + "%", page_len, start))
+    if not warehouse:
+        return []
 
-#     return items
+    # Fetch items that have stock in this warehouse
+    items = frappe.db.sql(
+        """
+        SELECT DISTINCT item_code
+        FROM `tabBin`
+        WHERE warehouse = %s
+          AND actual_qty > 0
+        AND item_code LIKE %s
+        LIMIT %s, %s
+        """,
+        (warehouse, "%%%s%%" % txt, start, page_len)
+    )
 
-
-
-# @frappe.whitelist()
-# def get_items_with_stock(doctype, txt, searchfield, start, page_len, filters):
-#     warehouse = filters.get("warehouse")
-#     if not warehouse:
-#         return []
-
-#     search_text = f"%{txt}%"
-
-#     items = frappe.db.sql("""
-#         SELECT 
-#             bin.item_code,
-#             bin.item_code   -- second column = label (safe and always available)
-#         FROM 
-#             `tabBin` bin
-#         WHERE
-#             bin.warehouse = %s
-#             AND bin.actual_qty > 0
-#             AND (
-#                 bin.item_code LIKE %s
-#             )
-#         ORDER BY 
-#             bin.item_code
-#         LIMIT %s OFFSET %s
-#     """, (warehouse, search_text, page_len, start))
-
-#     return items
+    return items

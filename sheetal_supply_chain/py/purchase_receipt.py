@@ -1,83 +1,9 @@
 import frappe
-
-# def update_fat_snf_from_qi(doc, method):
-
-#     for item in doc.items:
-
-#         if item.quality_inspection:
-
-#             # Fetch QI docstatus
-#             qi = item.quality_inspection
-#             qi_docstatus = frappe.db.get_value("Quality Inspection", qi, "docstatus")
-
-#             if qi_docstatus == 1:
-#                 # Fetch FAT
-#                 fat = frappe.db.get_value(
-#                     "Quality Inspection Reading",
-#                     {"parent": qi, "specification": "Fat"},
-#                     "reading_1"
-#                 ) or 0
-
-#                 # Fetch SNF
-#                 snf = frappe.db.get_value(
-#                     "Quality Inspection Reading",
-#                     {"parent": qi, "specification": "S.N.F."},
-#                     "reading_1"
-#                 ) or 0
-
-#                 fat = frappe.utils.flt(fat)
-#                 snf = frappe.utils.flt(snf)
-
-#                 # Set values
-#                 item.custom_fat = fat
-#                 item.custom_snf = snf
-#                 item.custom_fat_kg = item.stock_qty * fat
-#                 item.custom_snf_kg = item.stock_qty * snf
-
-#             else:
-#                 # QI not submitted → clear
-#                 item.custom_fat = 0
-#                 item.custom_snf = 0
-#                 item.custom_fat_kg = 0
-#                 item.custom_snf_kg = 0
-
-#         else:
-#             # No QI → clear
-#             item.custom_fat = 0
-#             item.custom_snf = 0
-#             item.custom_fat_kg = 0
-#             item.custom_snf_kg = 0
-
-
-# @frappe.whitelist()
-# def update_fat_snf_js(qi, stock_qty):
-#     fat = frappe.db.get_value(
-#         "Quality Inspection Reading",
-#         {"parent": qi, "specification": "FAT"},
-#         "reading_1"
-#     ) or 0
-
-#     snf = frappe.db.get_value(
-#         "Quality Inspection Reading",
-#         {"parent": qi, "specification": "S.N.F."},
-#         "reading_1"
-#     ) or 0
-
-#     fat = frappe.utils.flt(fat)
-#     snf = frappe.utils.flt(snf)
-
-#     return {
-#         "fat": fat,
-#         "snf": snf,
-#         "fat_kg": fat * frappe.utils.flt(stock_qty),
-#         "snf_kg": snf * frappe.utils.flt(stock_qty)
-#     }
-
-
-
-import frappe
 from frappe import _
- 
+
+from erpnext.stock.utils import get_stock_balance
+from frappe.utils import nowdate, nowtime, flt
+  
 @frappe.whitelist()
 def update_fat_snf_js(qi, stock_qty=None):
     """Always return fresh FAT/SNF from latest QI, even if previous QI was cancelled."""
@@ -105,8 +31,8 @@ def update_fat_snf_js(qi, stock_qty=None):
     return {
         "fat": fat,
         "snf": snf,
-        "fat_kg": fat * stock_qty,
-        "snf_kg": snf * stock_qty
+        "fat_kg": (fat/100) * stock_qty,
+        "snf_kg": (snf/100) * stock_qty
     }
  
  
@@ -136,12 +62,45 @@ def create_mqle_on_pr_submit(doc, method=None):
     Create Milk Quality Ledger Entry (MQLE) on Purchase Receipt Submit.
     Only for PR Item rows where custom_is_milk_type = 1.
     """
+    posting_date = doc.posting_date or nowdate()
+    posting_time = doc.posting_time or nowtime()
 
     for row in doc.items:
 
         # Only process milk items
         if not row.custom_is_milk_type:
             continue
+        
+
+        # -------------------------------
+        # Get balance AFTER transaction
+        # -------------------------------
+        stock_qty_after = get_stock_balance(
+            item_code=row.item_code,
+            warehouse=row.warehouse,
+            posting_date=posting_date,
+            posting_time=posting_time,
+            with_valuation_rate=False,
+            with_serial_no=False
+        )
+        
+                # -------------------------------
+        #  UOM handling (same as QI)
+        # -------------------------------
+        stock_uom = frappe.get_cached_value("Item", row.item_code, "stock_uom") or "KG"
+        included_uom = "Litre"
+
+        conversion_factor = frappe.db.get_value(
+            "UOM Conversion Detail",
+            {"parent": row.item_code, "uom": included_uom},
+            "conversion_factor"
+        ) or 1.0
+
+        qty_after_litre = (
+            stock_qty_after / conversion_factor
+            if stock_uom != included_uom
+            else stock_qty_after
+        )
 
         mqle = frappe.new_doc("Milk Quality Ledger Entry")
 
@@ -173,6 +132,10 @@ def create_mqle_on_pr_submit(doc, method=None):
 
         mqle.qty_in_liter = row.qty
         mqle.qty_in_kg = row.stock_qty
+        
+        mqle.qty_after_transaction_in_liter = qty_after_litre
+        mqle.qty_after_transaction_in_kg = stock_qty_after
+        
 
         # Save + Submit
         mqle.save(ignore_permissions=True)
@@ -213,6 +176,39 @@ def cancel_mqle_on_pr_cancel(doc, method=None):
 
 
 
+def validate_milk_type_with_supplier_profile(doc, method=None):
+    if not doc.supplier:
+        return
+
+    # Fetch allowed milk types from Supplier → custom_supplier_milk_profile
+    supplier_milk_types = frappe.db.get_all(
+        "Supplier Milk Profile",   # your actual child table name
+        filters={"parent": doc.supplier},
+        fields=["milk_type"],
+        pluck="milk_type"
+    )
+
+    # If Supplier has no milk profile rows → do not restrict
+    if not supplier_milk_types:
+        return
+
+    for item in doc.items:
+        if not getattr(item, "custom_is_milk_type", 0):
+            continue  # skip non-milk items
+
+        milk_type = item.custom_milk_type
+
+        if not milk_type:
+            frappe.throw(
+                f"Milk Type is required for milk item <b>{item.item_code}</b>."
+            )
+
+        # Check existence
+        if milk_type not in supplier_milk_types:
+            frappe.throw(
+                f"Milk Type <b>{milk_type}</b> in row {item.idx} is not allowed for Supplier <b>{doc.supplier}</b>.<br>"
+                f"Allowed Milk Types: <b>{', '.join(supplier_milk_types)}</b>"
+            )
 
 
 
@@ -414,9 +410,9 @@ def set_milk_pricing_on_items(doc, method=None):
         )
 
         kg_per_litre = flt(res.get("kg_per_litre") or 1.0339)
-        item.qty = flt(res.get("qty_litre"), 3)
+        # item.qty = flt(res.get("qty_litre"), 3)
         item.conversion_factor = kg_per_litre
-        item.stock_qty = flt(item.qty * item.conversion_factor, 3)
+        # item.stock_qty = flt(item.qty * item.conversion_factor, 3)
 
         item.milk_rate_type = res.get("rate_type")
         item.milk_base_rate = flt(res.get("base_rate"), 3)

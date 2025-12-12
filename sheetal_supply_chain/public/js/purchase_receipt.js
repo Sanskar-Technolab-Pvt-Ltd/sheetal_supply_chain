@@ -4,6 +4,9 @@ frappe.ui.form.on("Purchase Receipt", {
         let second = flt(frm.doc.custom_second_weight);
 
         frm.set_value("custom_net_weight", first - second);
+        frm.set_value("custom_net_weight_litre", frm.doc.custom_net_weight / 1.034);
+
+
     },
 
     custom_first_weight(frm) {
@@ -13,6 +16,7 @@ frappe.ui.form.on("Purchase Receipt", {
         // Recalculate if second weight exists
         if (second) {
             frm.set_value("custom_net_weight", first - second);
+            
         }
     },
 
@@ -30,6 +34,7 @@ frappe.ui.form.on("Purchase Receipt", {
                 open_milk_quality_ledger(frm);  
             }, __("View"));
         }
+        
     },
     onload(frm) {
         if (frm.doc.__islocal) return; // Skip for new documents
@@ -78,14 +83,24 @@ function fetch_fat_snf(frm, cdt, cdn) {
         },
         freeze: true,
         freeze_message: __("Fetching QI readings..."),
+
         callback(r) {
             if (!r.message) return;
-            frappe.model.set_value(cdt, cdn, "custom_fat", r.message.fat);
-            frappe.model.set_value(cdt, cdn, "custom_snf", r.message.snf);
-            frappe.model.set_value(cdt, cdn, "custom_fat_kg", r.message.fat_kg);
-            frappe.model.set_value(cdt, cdn, "custom_snf_kg", r.message.snf_kg);
+        
+            // Fix rounding issues (VERY IMPORTANT)
+            let fat = flt(r.message.fat, 3);
+            let snf = flt(r.message.snf, 3);
+            let fat_kg = flt(r.message.fat_kg, 3);
+            let snf_kg = flt(r.message.snf_kg, 3);
+        
+            frappe.model.set_value(cdt, cdn, "custom_fat", fat);
+            frappe.model.set_value(cdt, cdn, "custom_snf", snf);
+            frappe.model.set_value(cdt, cdn, "custom_fat_kg", fat_kg);
+            frappe.model.set_value(cdt, cdn, "custom_snf_kg", snf_kg);
+        
             frm.refresh_field("items");
         }
+        
     });
 }
  
