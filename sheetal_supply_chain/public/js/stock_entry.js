@@ -37,7 +37,8 @@ frappe.ui.form.on("Stock Entry", {
                 fetch_fat_snf_stock_entry(frm, item.doctype, item.name);
             }
         });
-    }
+    },
+    
 });
 
 
