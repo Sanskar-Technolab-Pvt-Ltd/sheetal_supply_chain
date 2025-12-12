@@ -160,10 +160,11 @@ doc_events = {
 
 	},
  "Purchase Receipt": {
-		"validate": "sheetal_supply_chain.py.purchase_receipt.validate_purchase_receipt",
+		# "validate": "sheetal_supply_chain.py.purchase_receipt.validate_purchase_receipt",
+		"before_save": "sheetal_supply_chain.py.purchase_receipt.validate_milk_type_with_supplier_profile",
 		"on_submit": "sheetal_supply_chain.py.purchase_receipt.create_mqle_on_pr_submit",
   		"on_cancel": "sheetal_supply_chain.py.purchase_receipt.cancel_mqle_on_pr_cancel",
-      "validate": "sheetal_supply_chain.py.purchase_receipt.set_milk_pricing_on_items",
+      	"validate": "sheetal_supply_chain.py.purchase_receipt.set_milk_pricing_on_items",
 	},
 
 	 "Stock Entry": {
@@ -172,6 +173,9 @@ doc_events = {
 						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials_issue",
                 	],
     		"on_cancel": "sheetal_supply_chain.py.stock_entry.cancel_mqle_on_se_cancel",
+    		"before_save": "sheetal_supply_chain.py.stock_entry.set_fat_snf_on_first_save",
+
+      
 	},
 
 
@@ -210,10 +214,10 @@ doc_events = {
 # 	"frappe.desk.doctype.event.event.get_events": "sheetal_supply_chain.event.get_events"
 # }
 #
-# override_whitelisted_methods = {
-#     "erpnext.controllers.stock_controller.make_quality_inspections":
-#         "sheetal_supply_chain.overrides.qi_override.make_quality_inspections"
-# }
+override_whitelisted_methods = {
+    "erpnext.controllers.stock_controller.make_quality_inspections":
+        "sheetal_supply_chain.overrides.qi_override.make_quality_inspections"
+}
 
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

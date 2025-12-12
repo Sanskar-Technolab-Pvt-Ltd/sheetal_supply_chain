@@ -28,15 +28,15 @@ def update_fat_snf_js(qi, qty=None):
     return {
         "fat": fat,
         "snf": snf,
-        "fat_kg": fat * qty,
-        "snf_kg": snf * qty
+        "fat_kg": (fat/100) * qty,
+        "snf_kg": (snf/100) * qty
     }
  
  
 from erpnext.stock.utils import get_stock_balance
 import frappe
 from frappe.utils import nowdate, nowtime, flt
-
+ 
 
 def create_mqle_on_se_submit(doc, method=None):
     """
@@ -270,8 +270,8 @@ def create_mqle_for_raw_materials(doc, method=None):
         # Milk params from LAST MQLE
         mqle.fat_per = fat_per
         mqle.snf_per = snf_per
-        mqle.fat = (fat_per * out_qty_in_kg)
-        mqle.snf = (snf_per * out_qty_in_kg)
+        mqle.fat = (fat_per * out_qty_in_kg/100)
+        mqle.snf = (snf_per * out_qty_in_kg/100)
 
         # OUTGOING QTY instead of incoming qty
         mqle.qty_in_liter = out_qty_in_liter
@@ -405,8 +405,8 @@ def create_mqle_for_raw_materials_issue(doc, method=None):
         # Milk params from LAST MQLE
         mqle.fat_per = fat_per
         mqle.snf_per = snf_per
-        mqle.fat = (fat_per * out_qty_in_kg)
-        mqle.snf = (snf_per * out_qty_in_kg)
+        mqle.fat = (fat_per * out_qty_in_kg/100)
+        mqle.snf = (snf_per * out_qty_in_kg/100)
 
         # OUTGOING QTY
         mqle.qty_in_liter = out_qty_in_liter
@@ -448,3 +448,79 @@ def cancel_mqle_on_se_cancel(doc, method=None):
             mqle_doc.cancel()
 
     frappe.msgprint("Milk Quality Ledger Entries Cancelled (linked to this Stock Entry).")
+
+
+
+@frappe.whitelist()
+def get_last_mqle_values(item_code, warehouse,qty):
+    """
+    Fetch last Milk Quality Ledger Entry values for this item.
+    Returns fat%, snf%, fat_kg, snf_kg
+    """
+
+# get last MQLE for this item
+    last_mqle = frappe.db.get_value(
+        "Milk Quality Ledger Entry",
+        filters={"item_code":item_code, "warehouse": warehouse,"docstatus": 1},
+        fieldname=["fat_per", "snf_per", "fat", "snf"],
+        order_by="creation desc",
+        as_dict=True,
+    )
+
+
+    if not last_mqle:
+        return {}
+
+    fat = flt(last_mqle.fat_per)
+    snf = flt(last_mqle.snf_per)
+    qty = flt(qty)
+
+    # Calculate kg values
+    fat_kg = (fat / 100) * qty
+    snf_kg = (snf / 100) * qty
+
+    return {
+        "custom_fat": fat,
+        "custom_snf": snf,
+        "custom_fat_kg": fat_kg,
+        "custom_snf_kg": snf_kg
+    }
+
+
+def set_fat_snf_on_first_save(doc, method=None):
+    # Only for Manufacture SE
+    if doc.stock_entry_type != "Manufacture":
+        return
+
+    # Only on first SAVE (new document)
+    if not doc.get("__islocal"):
+        return
+
+    for item in doc.items:
+        # run ONLY for raw material rows
+        # is_finished_item = 0 means raw material
+        if getattr(item, "is_finished_item", 0) == 1:
+            continue
+
+        if not item.item_code or not item.qty:
+            continue
+
+        warehouse = item.s_warehouse or item.t_warehouse
+        if not warehouse:
+            continue
+
+        # Call your custom function
+        values = get_last_mqle_values(
+            item_code=item.item_code,
+            warehouse=warehouse,
+            qty=item.qty
+        )
+
+        if not values:
+            continue
+
+        # Set values on item table
+        item.custom_fat = values.get("custom_fat")
+        item.custom_snf = values.get("custom_snf")
+        item.custom_fat_kg = values.get("custom_fat_kg")
+        item.custom_snf_kg = values.get("custom_snf_kg")

@@ -142,13 +142,13 @@
    "fieldname": "fat_per",
    "fieldtype": "Percent",
    "label": "Fat %",
-   "precision": "4"
+   "precision": "3"
   },
   {
    "fieldname": "fat",
    "fieldtype": "Float",
    "label": "Fat (in Kg)",
-   "precision": "4",
+   "precision": "3",
    "read_only": 1
   },
   {
@@ -177,13 +177,13 @@
    "fieldname": "snf_per",
    "fieldtype": "Percent",
    "label": "SNF %",
-   "precision": "4"
+   "precision": "3"
   },
   {
    "fieldname": "snf",
    "fieldtype": "Float",
    "label": "SNF (in Kg)",
-   "precision": "4",
+   "precision": "3",
    "read_only": 1
   },
   {
@@ -241,7 +241,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-10 16:41:36.409501",
+ "modified": "2025-12-12 17:23:24.639269",
  "modified_by": "Administrator",
  "module": "Sheetal Supply Chain",
  "name": "Milk Quality Ledger Entry",

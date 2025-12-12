@@ -11,7 +11,67 @@ frappe.ui.form.on("Quality Inspection", {
             };
         });
 
+ 
+        // frm.set_query("item_code", function(doc) {
+        //     if (!doc.custom_warehouse) {
+        //         return {
+        //             filters: {
+        //                 name: ["is", "set", ""]
+        //             }
+        //         };
+        //     }
+
+        //     return {
+        //         query: "sheetal_supply_chain.py.quality_inspection.get_items_with_stock",
+        //         filters: {
+        //             warehouse: doc.custom_warehouse
+        //         }
+        //     };
+        // });
     },
+
+    inspection_type(frm) {
+
+        // Leave original 3 types untouched
+        if (["Incoming", "Outgoing", "In Process"].includes(frm.doc.inspection_type)) {
+            return;
+        }
+
+        // New behaviour for "Internal"
+        if (frm.doc.inspection_type === "Internal") {
+
+            frm.set_query("item_code", function() {
+                return {
+                    query: "sheetal_supply_chain.api.warehouse_items.get_items_from_warehouse",
+                    filters: {
+                        warehouse: frm.doc.custom_warehouse || ""
+                    }
+                };
+            });
+        }
+    },
+
+    custom_warehouse(frm) {
+        if (frm.doc.inspection_type === "Internal") {
+
+            frm.set_query("item_code", function() {
+                return {
+                    query: "sheetal_supply_chain.py.quality_inspection.get_items_from_warehouse",
+                    filters: {
+                        warehouse: frm.doc.custom_warehouse || ""
+                    }
+                };
+            });
+
+            // Optional: auto-clear previous value
+            // frm.set_value("item_code", "");
+        }
+    }
+
+    // custom_warehouse(frm) {
+    //     frm.set_value("item_code", "");
+    //     frm.refresh_field("item_code");
+    // }
 
  
 });
@@ -59,3 +119,4 @@ frappe.ui.form.on("Quality Inspection Reading", {
         frm.refresh_field("readings");
     },
 });
+
