@@ -18,19 +18,19 @@ frappe.ui.form.on("Stock Entry Detail", {
         }
     },
 
-    // qty(frm, cdt, cdn) {
-    //     let row = locals[cdt][cdn];
-    //     calculate_fat_snf_row(row);
-    //     calculate_stock_entry_totals(frm);
-    //     frm.refresh_field("items");
-    // },
+    qty(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        calculate_fat_snf_row(row);
+        calculate_stock_entry_totals(frm);
+        frm.refresh_field("items");
+    },
 
     // custom_fat(frm, cdt, cdn) {
     //     let row = locals[cdt][cdn];
     //     calculate_fat_snf_row(row);
     //     calculate_stock_entry_totals(frm);
     //     frm.refresh_field("items");
-    // },
+    // },  
 
     // custom_snf(frm, cdt, cdn) {
     //     let row = locals[cdt][cdn];
@@ -56,6 +56,9 @@ frappe.ui.form.on("Stock Entry", {
                 open_milk_quality_ledger(frm);  
             }, __("View"));
         }
+
+        // ! calculate Stock entry Total
+        // calculate_stock_entry_totals(frm);
     },
 
     onload(frm) {
@@ -68,12 +71,12 @@ frappe.ui.form.on("Stock Entry", {
         });
     },
 
-    // items_add(frm) {
-    //     calculate_stock_entry_totals(frm);
-    // },
-    // items_remove(frm) {
-    //     calculate_stock_entry_totals(frm);
-    // }
+    items_add(frm) {
+        calculate_stock_entry_totals(frm);
+    },
+    items_remove(frm) {
+        calculate_stock_entry_totals(frm);
+    }
     
 });
 
@@ -83,7 +86,7 @@ function fetch_fat_snf_stock_entry(frm, cdt, cdn) {
 
     // Only finished items allowed
     if (row.is_finished_item != 1) return;
-
+    if (row.custom_fat != 0 || row.custom_fat_kg!= 0 || row.custom_fat_kg!= 0 || row.custom_snf_kg !=0 ) return;
     if (!row.quality_inspection) {
         frappe.model.set_value(cdt, cdn, "custom_fat", 0);
         frappe.model.set_value(cdt, cdn, "custom_snf", 0);

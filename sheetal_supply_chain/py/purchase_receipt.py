@@ -480,9 +480,9 @@ def set_milk_pricing_on_items(doc, method=None):
         item.milk_rate_per_litre_display = flt(res.get("rate_per_litre_display"), 3)
 
         if item.milk_rate_type == "Per Litre":
-            item.rate = item.milk_final_rate
+            item.custom_expected_rate = item.milk_final_rate
             item.amount = flt(item.qty * item.rate, 2)
         else:
-            item.rate = item.milk_final_rate
+            item.custom_expected_rate = item.milk_final_rate
             item.amount = item.milk_final_amount
 
