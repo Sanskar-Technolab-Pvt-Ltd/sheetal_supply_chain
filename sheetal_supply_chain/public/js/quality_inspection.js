@@ -14,22 +14,6 @@ frappe.ui.form.on("Quality Inspection", {
         });
 
  
-        // frm.set_query("item_code", function(doc) {
-        //     if (!doc.custom_warehouse) {
-        //         return {
-        //             filters: {
-        //                 name: ["is", "set", ""]
-        //             }
-        //         };
-        //     }
-
-        //     return {
-        //         query: "sheetal_supply_chain.py.quality_inspection.get_items_with_stock",
-        //         filters: {
-        //             warehouse: doc.custom_warehouse
-        //         }
-        //     };
-        // });
     },
 
     //! Apply warehouse-based item filtering only when inspection type is set to Internal
@@ -72,10 +56,6 @@ frappe.ui.form.on("Quality Inspection", {
         }
     }
 
-    // custom_warehouse(frm) {
-    //     frm.set_value("item_code", "");
-    //     frm.refresh_field("item_code");
-    // }
 
  
 });
@@ -111,7 +91,9 @@ frappe.ui.form.on("Quality Inspection Reading", {
         if (row.numeric) {
             // Numeric enabled → reset reading_value
             row.reading_value = "";
+            row.manual_inspection = 0
         } else {
+            row.manual_inspection = 1
             // Numeric disabled → update according to status
             if (row.status === "Accepted") {
                 row.reading_value = "Ok";
