@@ -1,6 +1,6 @@
 import frappe
 
-
+# ! Set reading_value based on Accepted/Rejected status for non-numeric Quality Inspection readings
 def qi_reading(doc, method):
     for row in doc.readings:
         if not row.numeric:
@@ -204,7 +204,7 @@ import frappe
 #     frappe.msgprint(f"Milk Quality Ledger Entry Created for Quality Inspection {doc.name}.")  
     
 from erpnext.stock.utils import get_stock_balance, get_combine_datetime, get_default_stock_uom
-
+# ! Create Milk Quality Ledger Entry (MQLE) on submit of Internal Quality Inspection using current stock balance and FAT/SNF readings
 def create_mqle_on_qi_submit(doc, method=None):
     if doc.inspection_type != "Internal":
         return
@@ -287,7 +287,7 @@ def create_mqle_on_qi_submit(doc, method=None):
 
     frappe.msgprint(f"Milk Quality Ledger Entry Created for Quality Inspection {doc.name}.")
 
-
+# ! Cancel all submitted Milk Quality Ledger Entries linked to an Internal Quality Inspection when the inspection is cancelled
 def cancel_mqle_on_qi_cancel(doc, method=None):
     """
     Cancel MQLE when Quality Inspection is cancelled.
@@ -318,7 +318,7 @@ def cancel_mqle_on_qi_cancel(doc, method=None):
             frappe.msgprint(f"Milk Quality Ledger Entry {mqle.name} cancelled.")
 
 
-
+# ! Return list of item codes having available stock in a selected warehouse for link field filtering
 @frappe.whitelist()
 def get_items_from_warehouse(doctype, txt, searchfield, start, page_len, filters):
     warehouse = filters.get("warehouse")

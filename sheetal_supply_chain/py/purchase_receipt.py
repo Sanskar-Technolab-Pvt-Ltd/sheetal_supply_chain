@@ -3,7 +3,8 @@ from frappe import _
 
 from erpnext.stock.utils import get_stock_balance
 from frappe.utils import nowdate, nowtime, flt
-  
+
+# ! Fetch latest FAT and SNF values from Quality Inspection and calculate FAT/SNF KG for real-time client-side updates
 @frappe.whitelist()
 def update_fat_snf_js(qi, stock_qty=None):
     """Always return fresh FAT/SNF from latest QI, even if previous QI was cancelled."""
@@ -36,7 +37,7 @@ def update_fat_snf_js(qi, stock_qty=None):
     }
  
  
-# NEW: Add this validation function
+# ! Update FAT, SNF, and their KG values on Purchase Receipt items before save based on linked Quality Inspection
 def validate_purchase_receipt(doc, method):
     """Update FAT/SNF values before saving if QI has changed"""
     for item in doc.items:
@@ -56,7 +57,7 @@ def validate_purchase_receipt(doc, method):
             item.custom_snf_kg = 0
 
 
-
+# ! Create Milk Quality Ledger Entries (MQLE) on Purchase Receipt submit for milk-type items using post-transaction stock balance
 def create_mqle_on_pr_submit(doc, method=None):
     """
     Create Milk Quality Ledger Entry (MQLE) on Purchase Receipt Submit.
@@ -145,7 +146,7 @@ def create_mqle_on_pr_submit(doc, method=None):
 
 
 
-
+# ! Cancel all Milk Quality Ledger Entries linked to a Purchase Receipt when the Purchase Receipt is cancelled
 def cancel_mqle_on_pr_cancel(doc, method=None):
     """
     Cancel all MQLE entries created from this Purchase Receipt
@@ -176,34 +177,86 @@ def cancel_mqle_on_pr_cancel(doc, method=None):
 
 
 
+# def validate_milk_type_with_supplier_profile(doc, method=None):
+#     if not doc.supplier:
+#         return
+
+#     # Fetch allowed milk types from Supplier → custom_supplier_milk_profile
+#     supplier_milk_types = frappe.db.get_all(
+#         "Supplier Milk Profile",   # your actual child table name
+#         filters={"parent": doc.supplier},
+#         fields=["milk_type"],
+#         pluck="milk_type"
+#     )
+
+#     # If Supplier has no milk profile rows → do not restrict
+#     if not supplier_milk_types:
+#         return
+
+#     for item in doc.items:
+#         if not getattr(item, "custom_is_milk_type", 0):
+#             continue  # skip non-milk items
+
+#         milk_type = item.custom_milk_type
+
+#         if not milk_type:
+#             frappe.throw(
+#                 f"Milk Type is required for milk item <b>{item.item_code}</b>."
+#             )
+
+#         # Check existence
+#         if milk_type not in supplier_milk_types:
+#             frappe.throw(
+#                 f"Milk Type <b>{milk_type}</b> in row {item.idx} is not allowed for Supplier <b>{doc.supplier}</b>.<br>"
+#                 f"Allowed Milk Types: <b>{', '.join(supplier_milk_types)}</b>"
+#             )
+
+
+
+
+
+# ! Validate milk type on Purchase Receipt items against Supplier Milk Profile configuration
 def validate_milk_type_with_supplier_profile(doc, method=None):
     if not doc.supplier:
         return
 
+    # Check if PR has any milk-type items
+    has_milk_items = any(
+        getattr(item, "custom_is_milk_type", 0)
+        for item in doc.items
+    )
+
+    # If no milk items → no validation needed
+    if not has_milk_items:
+        return
+
     # Fetch allowed milk types from Supplier → custom_supplier_milk_profile
     supplier_milk_types = frappe.db.get_all(
-        "Supplier Milk Profile",   # your actual child table name
+        "Supplier Milk Profile",
         filters={"parent": doc.supplier},
         fields=["milk_type"],
         pluck="milk_type"
     )
 
-    # If Supplier has no milk profile rows → do not restrict
+    # Supplier has NO milk types but PR has milk items
     if not supplier_milk_types:
-        return
+        frappe.throw(
+            f"Supplier <b>{doc.supplier}</b> has no Milk Types configured.<br>"
+            f"Please set Milk Types in <b>Supplier</b> before creating this Purchase Receipt."
+        )
 
+    # Validate each milk item
     for item in doc.items:
         if not getattr(item, "custom_is_milk_type", 0):
-            continue  # skip non-milk items
+            continue
 
         milk_type = item.custom_milk_type
 
         if not milk_type:
             frappe.throw(
-                f"Milk Type is required for milk item <b>{item.item_code}</b>."
+                f"Milk Type is required for milk item <b>{item.item_code}</b> (Row {item.idx})."
             )
 
-        # Check existence
         if milk_type not in supplier_milk_types:
             frappe.throw(
                 f"Milk Type <b>{milk_type}</b> in row {item.idx} is not allowed for Supplier <b>{doc.supplier}</b>.<br>"
@@ -213,12 +266,13 @@ def validate_milk_type_with_supplier_profile(doc, method=None):
 
 
 
+
 # Cow buffalo rate logic 
 
 import frappe
 from frappe.utils import flt
 
-
+# ! Fetch supplier-specific milk pricing profile for a given milk type including baseline FAT, SNF, and base rate
 def get_supplier_milk_profile(supplier: str, custom_milk_type: str):
     if not supplier or not custom_milk_type:
         return {}
@@ -235,20 +289,20 @@ def get_supplier_milk_profile(supplier: str, custom_milk_type: str):
     )
     return profile or {}
 
-
+# ! Calculate SNF percentage based on FAT percentage and Lactometer Reading (LR)
 def calculate_snf(fat: float, lr: float) -> float:
     fat = flt(fat)
     lr = flt(lr)
     return (fat / 4.0) + (0.2 * lr) + 0.14
 
-
+# ! Fetch Milk Type configuration document (Cow, Buffalo, etc.) required for rate calculation
 def get_milk_type_config(milk_type: str):
     """Fetch Milk Type doc (Cow / Buffalo etc.)."""
     if not milk_type:
         frappe.throw("Milk Type is required to calculate rate.")
     return frappe.get_doc("Milk Type", milk_type)
 
-
+# ! Calculate milk purchase rate and amount for a Purchase Receipt item based on FAT, SNF, milk type, and supplier rules
 @frappe.whitelist()
 def get_milk_rate_for_pr_item(
     supplier: str,
@@ -379,7 +433,7 @@ def get_milk_rate_for_pr_item(
     else:
         frappe.throw(f"Unsupported Base Rate Type {mt.base_rate_type} for Milk Type {custom_milk_type}")
 
-
+# ! Set milk pricing fields, rates, and amounts on Purchase Receipt items based on calculated milk rate logic
 def set_milk_pricing_on_items(doc, method=None):
     if doc.doctype != "Purchase Receipt":
         return

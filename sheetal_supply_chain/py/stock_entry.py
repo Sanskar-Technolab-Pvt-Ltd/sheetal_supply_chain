@@ -1,6 +1,9 @@
 import frappe
 from frappe import _
+from erpnext.stock.utils import get_stock_balance
+from frappe.utils import nowdate, nowtime, flt
  
+#  ! Fetch latest FAT/SNF values from Quality Inspection and calculate FAT/SNF KG based on given quantity (used for real-time JS updates)
 @frappe.whitelist()
 def update_fat_snf_js(qi, qty=None):
     """Always return fresh FAT/SNF from latest QI, even if previous QI was cancelled."""
@@ -33,11 +36,8 @@ def update_fat_snf_js(qi, qty=None):
     }
  
  
-from erpnext.stock.utils import get_stock_balance
-import frappe
-from frappe.utils import nowdate, nowtime, flt
- 
 
+# ! Create Milk Quality Ledger Entries (MQLE) for FINISHED milk items when Stock Entry of type Manufacture is submitted
 def create_mqle_on_se_submit(doc, method=None):
     """
     Create Milk Quality Ledger Entry (MQLE) on Stock Entry Submit
@@ -154,7 +154,7 @@ def create_mqle_on_se_submit(doc, method=None):
     frappe.msgprint("Milk Quality Ledger Entries Created for Stock Entry.")
 
 
-
+# ! Create MQLE entries for milk items during Material Issue Stock Entry using last recorded milk quality
 def create_mqle_for_raw_materials(doc, method=None):
     """
     Create MQLE for raw material milk items on Stock Entry Submit
@@ -285,7 +285,7 @@ def create_mqle_for_raw_materials(doc, method=None):
 
     frappe.msgprint("MQLE created for RAW MATERIAL milk items.")
 
-
+# ! Create MQLE entries for milk items during Material Issue Stock Entry using last recorded milk quality
 def create_mqle_for_raw_materials_issue(doc, method=None):
     """
     Create MQLE for milk items on Stock Entry Submit
@@ -421,7 +421,7 @@ def create_mqle_for_raw_materials_issue(doc, method=None):
     frappe.msgprint("MQLE created for Milk Items (Material Issue).")
 
 
-
+# ! Cancel all Milk Quality Ledger Entries linked to a Stock Entry when that Stock Entry is cancelled
 def cancel_mqle_on_se_cancel(doc, method=None):
     """
     Cancel all MQLE entries created from this Stock Entry
@@ -451,76 +451,167 @@ def cancel_mqle_on_se_cancel(doc, method=None):
 
 
 
-@frappe.whitelist()
-def get_last_mqle_values(item_code, warehouse,qty):
-    """
-    Fetch last Milk Quality Ledger Entry values for this item.
-    Returns fat%, snf%, fat_kg, snf_kg
-    """
+# @frappe.whitelist()
+# def get_last_mqle_values(item_code, warehouse,qty):
+#     """
+#     Fetch last Milk Quality Ledger Entry values for this item.
+#     Returns fat%, snf%, fat_kg, snf_kg
+#     """
 
-# get last MQLE for this item
-    last_mqle = frappe.db.get_value(
-        "Milk Quality Ledger Entry",
-        filters={"item_code":item_code, "warehouse": warehouse,"docstatus": 1},
-        fieldname=["fat_per", "snf_per", "fat", "snf"],
-        order_by="creation desc",
-        as_dict=True,
-    )
-
-
-    if not last_mqle:
-        return {}
-
-    fat = flt(last_mqle.fat_per)
-    snf = flt(last_mqle.snf_per)
-    qty = flt(qty)
-
-    # Calculate kg values
-    fat_kg = (fat / 100) * qty
-    snf_kg = (snf / 100) * qty
-
-    return {
-        "custom_fat": fat,
-        "custom_snf": snf,
-        "custom_fat_kg": fat_kg,
-        "custom_snf_kg": snf_kg
-    }
+# # get last MQLE for this item
+#     last_mqle = frappe.db.get_value(
+#         "Milk Quality Ledger Entry",
+#         filters={"item_code":item_code, "warehouse": warehouse,"docstatus": 1},
+#         fieldname=["fat_per", "snf_per", "fat", "snf"],
+#         order_by="creation desc",
+#         as_dict=True,
+#     )
 
 
-def set_fat_snf_on_first_save(doc, method=None):
-    # Only for Manufacture SE
+#     if not last_mqle:
+#         return {}
+
+#     fat = flt(last_mqle.fat_per)
+#     snf = flt(last_mqle.snf_per)
+#     qty = flt(qty)
+
+#     # Calculate kg values
+#     fat_kg = (fat / 100) * qty
+#     snf_kg = (snf / 100) * qty
+
+#     return {
+#         "custom_fat": fat,
+#         "custom_snf": snf,
+#         "custom_fat_kg": fat_kg,
+#         "custom_snf_kg": snf_kg
+#     }
+
+
+# def set_fat_snf_on_first_save(doc, method=None):
+#     # Only for Manufacture SE
+#     if doc.stock_entry_type != "Manufacture":
+#         return
+
+#     # Only on first SAVE (new document)
+#     if not doc.get("__islocal"):
+#         return
+
+#     for item in doc.items:
+#         # run ONLY for raw material rows
+#         # is_finished_item = 0 means raw material
+#         if getattr(item, "is_finished_item", 0) == 1:
+#             continue
+
+#         if not item.item_code or not item.qty:
+#             continue
+
+#         warehouse = item.s_warehouse or item.t_warehouse
+#         if not warehouse:
+#             continue
+
+#         # Call your custom function
+#         values = get_last_mqle_values(
+#             item_code=item.item_code,
+#             warehouse=warehouse,
+#             qty=item.qty
+#         )
+
+#         if not values:
+#             continue
+
+#         # Set values on item table
+#         item.custom_fat = values.get("custom_fat")
+#         item.custom_snf = values.get("custom_snf")
+#         item.custom_fat_kg = values.get("custom_fat_kg")
+#         item.custom_snf_kg = values.get("custom_snf_kg")
+
+
+
+# ! Calculate and set total quantity, total FAT/SNF percentages, total FAT/SNF KG, and weighted FAT/SNF percentages on Stock Entry
+def fetch_bom_fat_snf_for_manufacture(doc, method=None):
     if doc.stock_entry_type != "Manufacture":
         return
 
-    # Only on first SAVE (new document)
-    if not doc.get("__islocal"):
+    if not doc.bom_no:
+        return
+
+    # Fetch BOM items (only % values)
+    bom_items = frappe.get_all(
+        "BOM Item",
+        filters={"parent": doc.bom_no},
+        fields=["item_code", "custom_fat", "custom_snf"]
+    )
+
+    bom_map = {b.item_code: b for b in bom_items}
+
+    for row in doc.items:
+        # Skip finished items
+        if row.is_finished_item:
+            continue
+
+        bom_item = bom_map.get(row.item_code)
+        if not bom_item:
+            continue
+
+        fat_per = flt(bom_item.custom_fat)
+        snf_per = flt(bom_item.custom_snf)
+        qty = flt(row.qty)
+
+        row.custom_fat = fat_per
+        row.custom_snf = snf_per
+        row.custom_fat_kg = (fat_per * qty) / 100
+        row.custom_snf_kg = (snf_per * qty) / 100
+
+from frappe.utils import flt
+
+def set_stock_entry_totals(doc, method=None):
+    # Initialize safely
+    total_qty = 0.0
+    total_fat_per = 0.0
+    total_snf_per = 0.0
+    total_fat_kg = 0.0
+    total_snf_kg = 0.0
+
+    # If items table is empty or not loaded
+    if not getattr(doc, "items", None):
+        doc.custom_total_quantity = 0
+        doc.custom_total_fat_percentage = 0
+        doc.custom_total_snf_percentage = 0
+        doc.custom_total_fat_kg = 0
+        doc.custom_total_snf_kg = 0
+        doc.custom_fat_percentage = 0
+        doc.custom_snf_percentage = 0
         return
 
     for item in doc.items:
-        # run ONLY for raw material rows
-        # is_finished_item = 0 means raw material
-        if getattr(item, "is_finished_item", 0) == 1:
-            continue
+        # Defensive access (no AttributeError)
+        qty = flt(getattr(item, "qty", 0))
+        fat = flt(getattr(item, "custom_fat", 0))
+        snf = flt(getattr(item, "custom_snf", 0))
+        fat_kg = flt(getattr(item, "custom_fat_kg", 0))
+        snf_kg = flt(getattr(item, "custom_snf_kg", 0))
 
-        if not item.item_code or not item.qty:
-            continue
+        total_qty += qty
+        total_fat_per += fat
+        total_snf_per += snf
+        total_fat_kg += fat_kg
+        total_snf_kg += snf_kg
 
-        warehouse = item.s_warehouse or item.t_warehouse
-        if not warehouse:
-            continue
+    # Set totals (same fields, same meaning)
+    doc.custom_total_quantity = flt(total_qty)
+    doc.custom_total_fat_percentage = flt(total_fat_per)
+    doc.custom_total_snf_percentage = flt(total_snf_per)
+    doc.custom_total_fat_kg = flt(total_fat_kg)
+    doc.custom_total_snf_kg = flt(total_snf_kg)
 
-        # Call your custom function
-        values = get_last_mqle_values(
-            item_code=item.item_code,
-            warehouse=warehouse,
-            qty=item.qty
-        )
+    # Final percentage calculation (same logic)
+    if total_qty:
+        doc.custom_fat_percentage = flt((total_fat_kg / total_qty) * 100)
+        doc.custom_snf_percentage = flt((total_snf_kg / total_qty) * 100)
+    else:
+        doc.custom_fat_percentage = 0
+        doc.custom_snf_percentage = 0
 
-        if not values:
-            continue
 
-        # Set values on item table
-        item.custom_fat = values.get("custom_fat")
-        item.custom_snf = values.get("custom_snf")
-        item.custom_fat_kg = values.get("custom_fat_kg")
-        item.custom_snf_kg = values.get("custom_snf_kg")
+
+

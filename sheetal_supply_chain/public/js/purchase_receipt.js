@@ -1,4 +1,6 @@
+//! Handle Purchase Receipt header-level calculations, QI syncing, and ledger navigation
 frappe.ui.form.on("Purchase Receipt", {
+    //! Calculate net weight and litre conversion when second weight is entered
     custom_second_weight(frm) {
         let first = flt(frm.doc.custom_first_weight);
         let second = flt(frm.doc.custom_second_weight);
@@ -9,6 +11,7 @@ frappe.ui.form.on("Purchase Receipt", {
 
     },
 
+    //! Recalculate net weight when first weight changes and second weight exists
     custom_first_weight(frm) {
         let first = flt(frm.doc.custom_first_weight);
         let second = flt(frm.doc.custom_second_weight);
@@ -20,7 +23,7 @@ frappe.ui.form.on("Purchase Receipt", {
         }
     },
 
-
+    //! Sync FAT/SNF values on load and add Milk Ledger view button for submitted documents
     refresh(frm) {
         // Update all items with QI on form load
         frm.doc.items.forEach(item => {
@@ -48,7 +51,7 @@ frappe.ui.form.on("Purchase Receipt", {
 });
 
 
-
+//! Handle FAT/SNF updates for Purchase Receipt Item child table based on Quality Inspection
 frappe.ui.form.on("Purchase Receipt Item", {
 
     quality_inspection(frm, cdt, cdn) {
@@ -65,7 +68,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
 
 
 
- 
+//! Fetch FAT/SNF percentages and KG values from server using linked Quality Inspection 
 function fetch_fat_snf(frm, cdt, cdn) {
     let row = locals[cdt][cdn];
     if (!row.quality_inspection) {
@@ -109,6 +112,8 @@ function fetch_fat_snf(frm, cdt, cdn) {
  * Redirects user to Milk Quality Ledger with auto-filled filters
  * Safe for all edge cases
  */
+
+//! Redirect user to Milk Quality Ledger report with auto-applied filters from Purchase Receipt
 function open_milk_quality_ledger(frm) {
 
 
