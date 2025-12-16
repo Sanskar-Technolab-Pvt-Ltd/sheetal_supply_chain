@@ -172,12 +172,20 @@ doc_events = {
 						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials",
 						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials_issue",
                 	],
-    		"on_cancel": "sheetal_supply_chain.py.stock_entry.cancel_mqle_on_se_cancel",
-    		"before_save": "sheetal_supply_chain.py.stock_entry.set_fat_snf_on_first_save",
-
+    	"on_cancel": "sheetal_supply_chain.py.stock_entry.cancel_mqle_on_se_cancel",
+    	"before_save": "sheetal_supply_chain.py.stock_entry.fetch_bom_fat_snf_for_manufacture",
+        "on_update": "sheetal_supply_chain.py.stock_entry.set_stock_entry_totals",
       
 	},
 
+
+	 "BOM": {
+    		"before_save": "sheetal_supply_chain.py.bom.set_fat_snf_on_first_save",
+    		"on_update": "sheetal_supply_chain.py.bom.set_bom_totals",
+      
+
+      
+	},
 
 }
 

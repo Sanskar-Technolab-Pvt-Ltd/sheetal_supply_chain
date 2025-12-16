@@ -1,4 +1,6 @@
+//! Handle Quality Inspection form behavior including reference filtering and warehouse-based item selection
 frappe.ui.form.on("Quality Inspection", {
+    //! Filter reference documents to show only draft records of the selected company
     refresh(frm) {
         // for filtering only draft PR records
 
@@ -30,6 +32,7 @@ frappe.ui.form.on("Quality Inspection", {
         // });
     },
 
+    //! Apply warehouse-based item filtering only when inspection type is set to Internal
     inspection_type(frm) {
 
         // Leave original 3 types untouched
@@ -51,6 +54,7 @@ frappe.ui.form.on("Quality Inspection", {
         }
     },
 
+    //! Reapply item filtering when warehouse changes for Internal Quality Inspections
     custom_warehouse(frm) {
         if (frm.doc.inspection_type === "Internal") {
 
@@ -76,8 +80,10 @@ frappe.ui.form.on("Quality Inspection", {
  
 });
 
-
+//! Handle status and numeric-based behavior for Quality Inspection Reading child table
 frappe.ui.form.on("Quality Inspection Reading", {
+
+    //! Set reading_value automatically based on Accepted/Rejected status for non-numeric readings
     status(frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
 
@@ -97,6 +103,8 @@ frappe.ui.form.on("Quality Inspection Reading", {
             frm.refresh_field("readings");
         }
     },
+
+    //! Reset or derive reading_value when numeric flag is toggled in Quality Inspection Reading
     numeric(frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
 
