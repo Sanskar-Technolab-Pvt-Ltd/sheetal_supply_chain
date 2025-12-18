@@ -42,7 +42,7 @@ frappe.ui.form.on("Stock Entry Detail", {
 
 // ! Global Stock Entry Form Script
 frappe.ui.form.on("Stock Entry", {
-
+    
     refresh(frm) {
         frm.doc.items.forEach(item => {
             if (item.is_finished_item == 1 && item.quality_inspection) {
@@ -62,6 +62,21 @@ frappe.ui.form.on("Stock Entry", {
     },
 
     onload(frm) {
+        frm.fields_dict.stock_entry_type.get_query = function () {
+            return {
+                filters: {
+                    name: ["in", [
+                        "Material Receipt",
+                        "Material Issue",
+                        "Material Transfer",
+                        "Manufacture",
+                        "Repack"
+                    ]]
+                }
+            };
+        };
+
+
         if (frm.doc.__islocal) return;
 
         frm.doc.items.forEach(item => {
@@ -94,7 +109,7 @@ function fetch_fat_snf_stock_entry(frm, cdt, cdn) {
         frappe.model.set_value(cdt, cdn, "custom_snf_kg", 0);
         return;
     }
-
+    
     frappe.call({
         method: "sheetal_supply_chain.py.stock_entry.update_fat_snf_js",
         args: {
@@ -115,6 +130,9 @@ function fetch_fat_snf_stock_entry(frm, cdt, cdn) {
         }
     });
 }
+
+
+
 /**
  * Redirects user to Milk Quality Ledger with auto-filled filters
  * Safe for all edge cases
@@ -148,17 +166,6 @@ function open_milk_quality_ledger(frm) {
     // -------- 4) Redirect --------
     window.location.href = url;
 }
-// frappe.ui.form.on("BOM Item", {
-//     // qty(frm, cdt, cdn) {
-//     //     recalculate_bom(frm);
-//     // },
-//     // custom_fat_kg(frm, cdt, cdn) {
-//     //     recalculate_bom(frm);
-//     // },
-//     // custom_snf_kg(frm, cdt, cdn) {
-//     //     recalculate_bom(frm);
-//     // }
-// });
 
 //! Calculate FAT and SNF quantities (KG) for a single Stock Entry item row
 function calculate_fat_snf_row(row) {
