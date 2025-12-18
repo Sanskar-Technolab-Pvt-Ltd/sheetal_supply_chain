@@ -1,4 +1,6 @@
 import frappe
+from erpnext.stock.utils import get_stock_balance, get_combine_datetime, get_default_stock_uom
+
 
 # ! Set reading_value based on Accepted/Rejected status for non-numeric Quality Inspection readings
 def qi_reading(doc, method):
@@ -12,198 +14,7 @@ def qi_reading(doc, method):
             row.reading_value = ""
 
 
-
-
-import frappe
-
-# def create_mqle_on_qi_submit(doc, method=None):
-#     """
-#     Create Milk Quality Ledger Entry (MQLE) on Quality Inspection Submit.
-#     Only for inspection_type == 'Internal'.
-#     """
-
-#     if doc.inspection_type != "Internal":
-#         return
-
-#     # Initialize FAT and SNF percentages
-#     fat_per = snf_per = 0.0
-
-#     # Loop through readings to get FAT and SNF
-#     for reading in getattr(doc, "readings", []):
-#         value = reading.reading_1 or 0
-#         try:
-#             value = float(value)
-#         except (ValueError, TypeError):
-#             value = 0.0
-
-#         if reading.specification.upper() == "FAT":
-#             fat_per = value
-#         elif reading.specification.upper() in ("S.N.F.", "SNF"):
-#             snf_per = value
-
-#     # Fetch latest MQLE entry to get qty_in_liter and qty_in_kg
-#     latest_mqle = frappe.get_all(
-#         "Milk Quality Ledger Entry",
-#         filters={
-#             "item_code": doc.item_code,
-#             "warehouse": doc.custom_warehouse
-#         },
-#         order_by="creation desc",
-#         limit_page_length=1,
-#         fields=["qty_in_liter", "qty_in_kg"]
-#     )
-
-#     if latest_mqle:
-#         qty_in_liter = float(latest_mqle[0].qty_in_liter or 0)
-#         qty_in_kg = float(latest_mqle[0].qty_in_kg or 0)
-#     else:
-#         qty_in_liter = qty_in_kg = 0.0
-
-#     # Calculate fat and snf
-#     fat = fat_per * qty_in_kg
-#     snf = snf_per * qty_in_kg
-
-#     # Create MQLE document
-#     mqle = frappe.new_doc("Milk Quality Ledger Entry")
-#     mqle.item_code = doc.item_code
-#     mqle.item_name = doc.item_name
-#     mqle.warehouse = doc.custom_warehouse
-
-#     mqle.voucher_type = "Quality Inspection"
-#     mqle.voucher_no = doc.name
-#     mqle.voucher_detail_no = None  # No child table row
-
-#     mqle.posting_date = doc.report_date or frappe.utils.nowdate()
-#     mqle.posting_time = frappe.utils.nowtime()
-
-#     mqle.actual_quantity = qty_in_kg
     
-#     item_uoms = frappe.get_value(
-#         "Item",
-#         doc.item_code,
-#         ["stock_uom", "purchase_uom"],
-#         as_dict=True
-#     )
-#     mqle.stock_uom = item_uoms.get("stock_uom") if item_uoms and item_uoms.get("stock_uom") else "KG"
-#     mqle.uom = item_uoms.get("purchase_uom") if item_uoms and item_uoms.get("purchase_uom") else "Litre"
-
-#     mqle.fat_per = fat_per
-#     mqle.snf_per = snf_per
-#     mqle.fat = fat
-#     mqle.snf = snf
-
-#     mqle.qty_in_liter = qty_in_liter
-#     mqle.qty_in_kg = qty_in_kg
-
-#     # Save and submit
-#     mqle.save(ignore_permissions=True)
-#     mqle.submit()
-
-#     frappe.msgprint(f"Milk Quality Ledger Entry Created for Quality Inspection {doc.name}.")
-
-
-
-
-# def create_mqle_on_qi_submit(doc, method=None):
-#     """
-#     Create Milk Quality Ledger Entry (MQLE) on Quality Inspection Submit.
-#     Only for inspection_type == 'Internal'.
-#     """
- 
-#     if doc.inspection_type != "Internal":
-#         return
- 
-#     # Initialize FAT and SNF percentages
-#     fat_per = snf_per = 0.0
- 
-#     # Loop through readings to get FAT and SNF
-#     for reading in getattr(doc, "readings", []):
-#         value = reading.reading_1 or 0
-#         try:
-#             value = float(value)
-#         except (ValueError, TypeError):
-#             value = 0.0
- 
-#         if reading.specification.upper() == "FAT":
-#             fat_per = value
-#         elif reading.specification.upper() in ("S.N.F.", "SNF"):
-#             snf_per = value
- 
-#     # Fetch latest MQLE entry to get qty_in_kg (balance in default UOM)
-#     latest_mqle = frappe.get_all(
-#         "Milk Quality Ledger Entry",
-#         filters={
-#             "item_code": doc.item_code,
-#             "warehouse": doc.custom_warehouse
-#         },
-#         order_by="creation desc",
-#         limit_page_length=1,
-#         fields=["qty_in_liter", "qty_in_kg"]
-#     )
- 
-#     if latest_mqle:
-#         qty_in_kg = float(latest_mqle[0].qty_in_kg or 0)
-#     else:
-#         qty_in_kg = 0.0
- 
-#     # Fetch stock_uom of the item
-#     item_uoms = frappe.get_value(
-#         "Item",
-#         doc.item_code,
-#         ["stock_uom", "purchase_uom"],
-#         as_dict=True
-#     )
-#     stock_uom = item_uoms.get("stock_uom") if item_uoms and item_uoms.get("stock_uom") else "KG"
-#     included_uom = "Litre"
- 
-#     # Get conversion factor from stock UOM -> Litre
-#     conversion_factor = frappe.db.get_value(
-#         "UOM Conversion Detail",
-#         {"parent": doc.item_code, "uom": included_uom},
-#         "conversion_factor"
-#     ) or 1
- 
-#     # Calculate balance in included UOM
-#     qty_in_litre = qty_in_kg / conversion_factor if stock_uom != included_uom else qty_in_kg
- 
-#     # Calculate fat and snf
-#     fat = fat_per * qty_in_kg
-#     snf = snf_per * qty_in_kg
- 
-#     # Create MQLE document
-#     mqle = frappe.new_doc("Milk Quality Ledger Entry")
-#     mqle.item_code = doc.item_code
-#     mqle.item_name = doc.item_name
-#     mqle.warehouse = doc.custom_warehouse
- 
-#     mqle.voucher_type = "Quality Inspection"
-#     mqle.voucher_no = doc.name
-#     mqle.voucher_detail_no = None  # No child table row
- 
-#     mqle.posting_date = doc.report_date or frappe.utils.nowdate()
-#     mqle.posting_time = frappe.utils.nowtime()
- 
-#     mqle.actual_quantity = qty_in_kg
- 
-#     mqle.stock_uom = stock_uom
-#     mqle.uom = included_uom
- 
-#     mqle.fat_per = fat_per
-#     mqle.snf_per = snf_per
-#     mqle.fat = fat
-#     mqle.snf = snf
- 
-#     # Balance quantities
-#     mqle.qty_in_kg = qty_in_kg
-#     mqle.qty_in_liter = qty_in_litre
- 
-#     # Save and submit
-#     mqle.save(ignore_permissions=True)
-#     mqle.submit()
- 
-#     frappe.msgprint(f"Milk Quality Ledger Entry Created for Quality Inspection {doc.name}.")  
-    
-from erpnext.stock.utils import get_stock_balance, get_combine_datetime, get_default_stock_uom
 # ! Create Milk Quality Ledger Entry (MQLE) on submit of Internal Quality Inspection using current stock balance and FAT/SNF readings
 def create_mqle_on_qi_submit(doc, method=None):
     if doc.inspection_type != "Internal":
@@ -285,7 +96,6 @@ def create_mqle_on_qi_submit(doc, method=None):
     mqle.save(ignore_permissions=True)
     mqle.submit()
 
-    frappe.msgprint(f"Milk Quality Ledger Entry Created for Quality Inspection {doc.name}.")
 
 # ! Cancel all submitted Milk Quality Ledger Entries linked to an Internal Quality Inspection when the inspection is cancelled
 def cancel_mqle_on_qi_cancel(doc, method=None):
@@ -315,8 +125,6 @@ def cancel_mqle_on_qi_cancel(doc, method=None):
             mqle_doc = frappe.get_doc("Milk Quality Ledger Entry", mqle.name)
             mqle_doc.is_cancelled = 1
             mqle_doc.cancel()
-            frappe.msgprint(f"Milk Quality Ledger Entry {mqle.name} cancelled.")
-
 
 # ! Return list of item codes having available stock in a selected warehouse for link field filtering
 @frappe.whitelist()
