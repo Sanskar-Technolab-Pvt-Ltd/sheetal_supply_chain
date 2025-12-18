@@ -2,6 +2,8 @@ import frappe
 from frappe import _
 from erpnext.stock.utils import get_stock_balance
 from frappe.utils import nowdate, nowtime, flt
+from datetime import datetime
+
  
 #  ! Fetch latest FAT/SNF values from Quality Inspection and calculate FAT/SNF KG based on given quantity (used for real-time JS updates)
 @frappe.whitelist()
@@ -151,7 +153,6 @@ def create_mqle_on_se_submit(doc, method=None):
         mqle.save(ignore_permissions=True)
         mqle.submit()
 
-    frappe.msgprint("Milk Quality Ledger Entries Created for Stock Entry.")
 
 
 # ! Create MQLE entries for milk items during Material Issue Stock Entry using last recorded milk quality
@@ -283,7 +284,6 @@ def create_mqle_for_raw_materials(doc, method=None):
         mqle.save(ignore_permissions=True)
         mqle.submit()
 
-    frappe.msgprint("MQLE created for RAW MATERIAL milk items.")
 
 # ! Create MQLE entries for milk items during Material Issue Stock Entry using last recorded milk quality
 def create_mqle_for_raw_materials_issue(doc, method=None):
@@ -418,7 +418,6 @@ def create_mqle_for_raw_materials_issue(doc, method=None):
         mqle.save(ignore_permissions=True)
         mqle.submit()
 
-    frappe.msgprint("MQLE created for Milk Items (Material Issue).")
 
 
 # ! Cancel all Milk Quality Ledger Entries linked to a Stock Entry when that Stock Entry is cancelled
@@ -447,85 +446,6 @@ def cancel_mqle_on_se_cancel(doc, method=None):
             mqle_doc.is_cancelled = 1
             mqle_doc.cancel()
 
-    frappe.msgprint("Milk Quality Ledger Entries Cancelled (linked to this Stock Entry).")
-
-
-
-# @frappe.whitelist()
-# def get_last_mqle_values(item_code, warehouse,qty):
-#     """
-#     Fetch last Milk Quality Ledger Entry values for this item.
-#     Returns fat%, snf%, fat_kg, snf_kg
-#     """
-
-# # get last MQLE for this item
-#     last_mqle = frappe.db.get_value(
-#         "Milk Quality Ledger Entry",
-#         filters={"item_code":item_code, "warehouse": warehouse,"docstatus": 1},
-#         fieldname=["fat_per", "snf_per", "fat", "snf"],
-#         order_by="creation desc",
-#         as_dict=True,
-#     )
-
-
-#     if not last_mqle:
-#         return {}
-
-#     fat = flt(last_mqle.fat_per)
-#     snf = flt(last_mqle.snf_per)
-#     qty = flt(qty)
-
-#     # Calculate kg values
-#     fat_kg = (fat / 100) * qty
-#     snf_kg = (snf / 100) * qty
-
-#     return {
-#         "custom_fat": fat,
-#         "custom_snf": snf,
-#         "custom_fat_kg": fat_kg,
-#         "custom_snf_kg": snf_kg
-#     }
-
-
-# def set_fat_snf_on_first_save(doc, method=None):
-#     # Only for Manufacture SE
-#     if doc.stock_entry_type != "Manufacture":
-#         return
-
-#     # Only on first SAVE (new document)
-#     if not doc.get("__islocal"):
-#         return
-
-#     for item in doc.items:
-#         # run ONLY for raw material rows
-#         # is_finished_item = 0 means raw material
-#         if getattr(item, "is_finished_item", 0) == 1:
-#             continue
-
-#         if not item.item_code or not item.qty:
-#             continue
-
-#         warehouse = item.s_warehouse or item.t_warehouse
-#         if not warehouse:
-#             continue
-
-#         # Call your custom function
-#         values = get_last_mqle_values(
-#             item_code=item.item_code,
-#             warehouse=warehouse,
-#             qty=item.qty
-#         )
-
-#         if not values:
-#             continue
-
-#         # Set values on item table
-#         item.custom_fat = values.get("custom_fat")
-#         item.custom_snf = values.get("custom_snf")
-#         item.custom_fat_kg = values.get("custom_fat_kg")
-#         item.custom_snf_kg = values.get("custom_snf_kg")
-
-
 
 # ! Calculate and set total quantity, total FAT/SNF percentages, total FAT/SNF KG, and weighted FAT/SNF percentages on Stock Entry
 def fetch_bom_fat_snf_for_manufacture(doc, method=None):
@@ -535,6 +455,7 @@ def fetch_bom_fat_snf_for_manufacture(doc, method=None):
     if not doc.bom_no:
         return
 
+    doc.custom_production_order = ""
     # Fetch BOM items (only % values)
     bom_items = frappe.get_all(
         "BOM Item",
@@ -562,7 +483,8 @@ def fetch_bom_fat_snf_for_manufacture(doc, method=None):
         row.custom_fat_kg = (fat_per * qty) / 100
         row.custom_snf_kg = (snf_per * qty) / 100
 
-from frappe.utils import flt
+
+# Calculates and sets total quantity, FAT/SNF percentages, and FAT/SNF weights on Stock Entry based on item-level values.
 
 def set_stock_entry_totals(doc, method=None):
     # Initialize safely
@@ -614,4 +536,83 @@ def set_stock_entry_totals(doc, method=None):
 
 
 
+# Auto-generates a date-wise sequential Production Order number for Manufacture Stock Entries, reusing cancelled numbers where possible.
+def generate_production_order(doc, method=None):
 
+    if doc.stock_entry_type != "Manufacture":
+        return
+
+    if doc.custom_production_order:
+        return
+
+    today = datetime.strptime(nowdate(), "%Y-%m-%d")
+    date_part = today.strftime("%d%m%y")
+    prefix = f"WO-{date_part}-"
+
+    # Fetch all SUBMITTED counters
+   
+    submitted = frappe.db.sql("""
+        SELECT custom_production_order
+        FROM `tabStock Entry`
+        WHERE
+            stock_entry_type = 'Manufacture'
+            AND docstatus = 1
+            AND custom_production_order LIKE %s
+    """, (prefix + "%",), as_dict=True)
+
+    submitted_numbers = sorted(
+        int(d.custom_production_order.split("-")[-1])
+        for d in submitted
+    )
+
+    # Fetch all CANCELLED counters
+
+    cancelled = frappe.db.sql("""
+        SELECT custom_production_order
+        FROM `tabStock Entry`
+        WHERE
+            stock_entry_type = 'Manufacture'
+            AND docstatus = 2
+            AND custom_production_order LIKE %s
+    """, (prefix + "%",), as_dict=True)
+
+    cancelled_numbers = sorted(
+        int(d.custom_production_order.split("-")[-1])
+        for d in cancelled
+    )
+
+    # CASE 1
+    
+    if not submitted_numbers and cancelled_numbers:
+        reuse_no = cancelled_numbers[0]
+        doc.db_set(
+            "custom_production_order",
+            f"{prefix}{str(reuse_no).zfill(5)}",
+            update_modified=False
+        )
+        return
+
+    # CASE 2
+
+    if submitted_numbers and cancelled_numbers:
+        max_submitted = max(submitted_numbers)
+
+        eligible = [n for n in cancelled_numbers if n > max_submitted]
+        if eligible:
+            reuse_no = min(eligible)
+            doc.db_set(
+                "custom_production_order",
+                f"{prefix}{str(reuse_no).zfill(5)}",
+                update_modified=False
+            )
+            return
+
+
+    # CASE 3
+
+    next_no = max(submitted_numbers) + 1 if submitted_numbers else 1
+    doc.db_set(
+        "custom_production_order",
+        f"{prefix}{str(next_no).zfill(5)}",
+        update_modified=False
+    )

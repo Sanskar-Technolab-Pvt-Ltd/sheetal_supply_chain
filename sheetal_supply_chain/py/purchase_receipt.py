@@ -1,8 +1,8 @@
 import frappe
 from frappe import _
-
 from erpnext.stock.utils import get_stock_balance
 from frappe.utils import nowdate, nowtime, flt
+
 
 # ! Fetch latest FAT and SNF values from Quality Inspection and calculate FAT/SNF KG for real-time client-side updates
 @frappe.whitelist()
@@ -142,7 +142,6 @@ def create_mqle_on_pr_submit(doc, method=None):
         mqle.save(ignore_permissions=True)
         mqle.submit()
 
-    frappe.msgprint("Milk Quality Ledger Entries Created.")
 
 
 
@@ -171,47 +170,6 @@ def cancel_mqle_on_pr_cancel(doc, method=None):
             mqle_doc = frappe.get_doc("Milk Quality Ledger Entry", mqle.name)
             mqle_doc.is_cancelled = 1
             mqle_doc.cancel()
-
-    frappe.msgprint("Milk Quality Ledger Entries Cancelled (linked to this Purchase Receipt).")
-
-
-
-
-# def validate_milk_type_with_supplier_profile(doc, method=None):
-#     if not doc.supplier:
-#         return
-
-#     # Fetch allowed milk types from Supplier → custom_supplier_milk_profile
-#     supplier_milk_types = frappe.db.get_all(
-#         "Supplier Milk Profile",   # your actual child table name
-#         filters={"parent": doc.supplier},
-#         fields=["milk_type"],
-#         pluck="milk_type"
-#     )
-
-#     # If Supplier has no milk profile rows → do not restrict
-#     if not supplier_milk_types:
-#         return
-
-#     for item in doc.items:
-#         if not getattr(item, "custom_is_milk_type", 0):
-#             continue  # skip non-milk items
-
-#         milk_type = item.custom_milk_type
-
-#         if not milk_type:
-#             frappe.throw(
-#                 f"Milk Type is required for milk item <b>{item.item_code}</b>."
-#             )
-
-#         # Check existence
-#         if milk_type not in supplier_milk_types:
-#             frappe.throw(
-#                 f"Milk Type <b>{milk_type}</b> in row {item.idx} is not allowed for Supplier <b>{doc.supplier}</b>.<br>"
-#                 f"Allowed Milk Types: <b>{', '.join(supplier_milk_types)}</b>"
-#             )
-
-
 
 
 
@@ -267,10 +225,7 @@ def validate_milk_type_with_supplier_profile(doc, method=None):
 
 
 
-# Cow buffalo rate logic 
-
-import frappe
-from frappe.utils import flt
+# Cow-buffalo rate logic 
 
 # ! Fetch supplier-specific milk pricing profile for a given milk type including baseline FAT, SNF, and base rate
 def get_supplier_milk_profile(supplier: str, custom_milk_type: str):

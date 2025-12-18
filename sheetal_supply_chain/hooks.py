@@ -168,10 +168,12 @@ doc_events = {
 	},
 
 	 "Stock Entry": {
-		"on_submit": ["sheetal_supply_chain.py.stock_entry.create_mqle_on_se_submit",
+		"on_submit": [
+      					"sheetal_supply_chain.py.stock_entry.create_mqle_on_se_submit",
 						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials",
 						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials_issue",
-                	],
+      					"sheetal_supply_chain.py.stock_entry.generate_production_order",
+                	 ],
     	"on_cancel": "sheetal_supply_chain.py.stock_entry.cancel_mqle_on_se_cancel",
     	"before_save": "sheetal_supply_chain.py.stock_entry.fetch_bom_fat_snf_for_manufacture",
         "on_update": "sheetal_supply_chain.py.stock_entry.set_stock_entry_totals",
