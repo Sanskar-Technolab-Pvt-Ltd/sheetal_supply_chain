@@ -61,7 +61,7 @@ def validate_purchase_receipt(doc, method):
 def create_mqle_on_pr_submit(doc, method=None):
     """
     Create Milk Quality Ledger Entry (MQLE) on Purchase Receipt Submit.
-    Only for PR Item rows where custom_is_milk_type = 1.
+    Only for PR Item rows where custom_maintain_fat_snf = 1.
     """
     posting_date = doc.posting_date or nowdate()
     posting_time = doc.posting_time or nowtime()
@@ -69,7 +69,7 @@ def create_mqle_on_pr_submit(doc, method=None):
     for row in doc.items:
 
         # Only process milk items
-        if not row.custom_is_milk_type:
+        if not row.custom_maintain_fat_snf:
             continue
         
 
@@ -178,12 +178,11 @@ def validate_milk_type_with_supplier_profile(doc, method=None):
     if not doc.supplier:
         return
 
-    # Check if PR has any milk-type items
+    # Check if PR has any milk-type items (based on milk type, not checkbox)
     has_milk_items = any(
-        getattr(item, "custom_is_milk_type", 0)
+        getattr(item, "custom_milk_type", None)
         for item in doc.items
     )
-
     # If no milk items → no validation needed
     if not has_milk_items:
         return
@@ -205,7 +204,7 @@ def validate_milk_type_with_supplier_profile(doc, method=None):
 
     # Validate each milk item
     for item in doc.items:
-        if not getattr(item, "custom_is_milk_type", 0):
+        if not getattr(item, "custom_maintain_fat_snf", 0):
             continue
 
         milk_type = item.custom_milk_type
@@ -396,12 +395,11 @@ def set_milk_pricing_on_items(doc, method=None):
         return
 
     for item in doc.items:
-        if not getattr(item, "custom_is_milk_type", 0):
+        if not getattr(item, "custom_milk_type", None):
             continue
         
         if not (
-            getattr(item, "custom_milk_type", None)
-            and getattr(item, "custom_fat", None)
+            getattr(item, "custom_fat", None)
             and getattr(item, "custom_snf", None)
         ):
             continue
@@ -435,9 +433,9 @@ def set_milk_pricing_on_items(doc, method=None):
         item.milk_rate_per_litre_display = flt(res.get("rate_per_litre_display"), 3)
 
         if item.milk_rate_type == "Per Litre":
-            item.custom_expected_rate = item.milk_final_rate
+            item.rate = item.milk_final_rate
             item.amount = flt(item.qty * item.rate, 2)
         else:
-            item.custom_expected_rate = item.milk_final_rate
+            item.rate = item.milk_final_rate
             item.amount = item.milk_final_amount
 
