@@ -62,19 +62,19 @@ frappe.ui.form.on("Stock Entry", {
     },
 
     onload(frm) {
-        frm.fields_dict.stock_entry_type.get_query = function () {
-            return {
-                filters: {
-                    name: ["in", [
-                        "Material Receipt",
-                        "Material Issue",
-                        "Material Transfer",
-                        "Manufacture",
-                        "Repack"
-                    ]]
-                }
-            };
-        };
+        // frm.fields_dict.stock_entry_type.get_query = function () {
+        //     return {
+        //         filters: {
+        //             name: ["in", [
+        //                 "Material Receipt",
+        //                 "Material Issue",
+        //                 "Material Transfer",
+        //                 "Manufacture",
+        //                 "Repack"
+        //             ]]
+        //         }
+        //     };
+        // };
 
 
         if (frm.doc.__islocal) return;
