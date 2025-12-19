@@ -54,7 +54,7 @@ def create_mqle_on_se_submit(doc, method=None):
     for row in doc.items:
 
         # Only Milk items
-        if not (row.is_finished_item and row.custom_is_milk_type):
+        if not (row.is_finished_item and row.custom_maintain_fat_snf):
             continue
 
         # -------------------------------
@@ -159,7 +159,7 @@ def create_mqle_on_se_submit(doc, method=None):
 def create_mqle_for_raw_materials(doc, method=None):
     """
     Create MQLE for raw material milk items on Stock Entry Submit
-    (is_finished_item = 0 AND custom_is_milk_type = 1)
+    (is_finished_item = 0 AND custom_maintain_fat_snf = 1)
     """
         # ------------------------------------
     if doc.stock_entry_type != "Manufacture":
@@ -171,7 +171,7 @@ def create_mqle_for_raw_materials(doc, method=None):
     for row in doc.items:
 
         # Only RAW MATERIAL milk items
-        if not (not row.is_finished_item and row.custom_is_milk_type):
+        if not (not row.is_finished_item and row.custom_maintain_fat_snf):
             continue
 
         warehouse = row.t_warehouse or row.s_warehouse
@@ -291,7 +291,7 @@ def create_mqle_for_raw_materials_issue(doc, method=None):
     Create MQLE for milk items on Stock Entry Submit
     Conditions:
         - Stock Entry Type = Material Issue
-        - custom_is_milk_type = 1
+        - custom_maintain_fat_snf = 1
     """
 
     # Run ONLY for Material Issue
@@ -304,7 +304,7 @@ def create_mqle_for_raw_materials_issue(doc, method=None):
     for row in doc.items:
 
         # Only milk items (remove is_finished_item condition)
-        if row.custom_is_milk_type != 1:
+        if row.custom_maintain_fat_snf != 1:
             continue
 
         warehouse = row.t_warehouse or row.s_warehouse
