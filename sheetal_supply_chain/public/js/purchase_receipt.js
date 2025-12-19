@@ -1,4 +1,3 @@
-//! Handle Purchase Receipt header-level calculations, QI syncing, and ledger navigation
 frappe.ui.form.on("Purchase Receipt", {
     //! Calculate net weight and litre conversion when second weight is entered
     custom_second_weight(frm) {
@@ -47,7 +46,6 @@ frappe.ui.form.on("Purchase Receipt", {
             }
         });
     }
-
 });
 
 
@@ -62,7 +60,23 @@ frappe.ui.form.on("Purchase Receipt Item", {
         if (row.quality_inspection) {
             fetch_fat_snf(frm, cdt, cdn);
         }
-    }
+    },
+
+
+// Capacity Logic 
+
+    // item_code(frm, cdt, cdn) {
+    //     setTimeout(() => {
+    //         set_actual_qty_from_bin(frm, cdt, cdn);
+    //     }, 300);    },
+
+    // warehouse(frm, cdt, cdn) {
+    //     set_actual_qty_from_bin(frm, cdt, cdn);
+    // },
+
+    // uom(frm, cdt, cdn) {
+    //     set_actual_qty_from_bin(frm, cdt, cdn);
+    // }
 
 });
 
@@ -141,3 +155,46 @@ function open_milk_quality_ledger(frm) {
     // -------- 4) Redirect --------
     window.location.href = url;
 }
+
+
+
+// Capacity Logic 
+
+// async function set_actual_qty_from_bin(frm, cdt, cdn) {
+//     let row = locals[cdt][cdn];
+//     if (!row.item_code || !row.warehouse || !row.uom) return;
+
+//     let item = await frappe.db.get_doc("Item", row.item_code);
+//     let stock_uom = item.stock_uom;
+
+//     let bin = await frappe.db.get_value(
+//         "Bin",
+//         {
+//             item_code: row.item_code,
+//             warehouse: row.warehouse
+//         },
+//         "actual_qty"
+//     );
+
+//     let actual_qty = bin.message?.actual_qty || 0;
+//     let final_qty = actual_qty;
+
+//     if (row.uom !== stock_uom) {
+//         let uom_row = item.uoms.find(u => u.uom === row.uom);
+
+//         if (!uom_row) {
+//             frappe.msgprint(
+//                 `Conversion factor not defined for ${row.uom} in Item ${row.item_code}`
+//             );
+//             row.custom_actual_qty = 0;
+//             frm.refresh_field("items");
+//             return;
+//         }
+
+//         final_qty = actual_qty / uom_row.conversion_factor;
+//     }
+
+//     row.custom_actual_qty = final_qty;
+//     frm.refresh_field("items");
+// }
+
