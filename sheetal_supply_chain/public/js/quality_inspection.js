@@ -1,4 +1,3 @@
-//! Handle Quality Inspection form behavior including reference filtering and warehouse-based item selection
 frappe.ui.form.on("Quality Inspection", {
     //! Filter reference documents to show only draft records of the selected company
     refresh(frm) {
@@ -54,7 +53,26 @@ frappe.ui.form.on("Quality Inspection", {
             // Optional: auto-clear previous value
             // frm.set_value("item_code", "");
         }
+    },
+
+    item_code(frm) {
+        // Covers manual item selection
+        fetch_mbrt_from_item(frm);
+    },
+    onload(frm) {
+        // Covers auto-created QI (PR / SE)
+        setTimeout(() => {
+            fetch_mbrt_from_item(frm);
+        }, 300);
+    },
+
+    custom_mbrt_start_time(frm) {
+        calculate_total_time(frm);
+    },
+    custom_mbrt_end_time(frm) {
+        calculate_total_time(frm);
     }
+
 
 
  
@@ -110,3 +128,51 @@ frappe.ui.form.on("Quality Inspection Reading", {
     },
 });
 
+
+
+function fetch_mbrt_from_item(frm) {
+    // Safety checks
+    if (!frm.doc.item_code) return;
+
+    // Do NOT override if user already changed it
+    if (frm.doc.__mbrt_fetched) return;
+
+    frappe.db.get_value(
+        'Item',
+        frm.doc.item_code,
+        'custom_has_mbrt_required',
+        (r) => {
+            if (r && r.custom_has_mbrt_required !== undefined) {
+                frm.set_value(
+                    'custom_has_mbrt_required',
+                    r.custom_has_mbrt_required
+                );
+
+                // Mark as fetched once
+                frm.doc.__mbrt_fetched = true;
+            }
+        }
+    );
+}
+
+
+function calculate_total_time(frm) {
+    if (frm.doc.custom_mbrt_start_time && frm.doc.custom_mbrt_end_time) {
+
+        let start = frappe.datetime.str_to_obj(frm.doc.custom_mbrt_start_time);
+        let end = frappe.datetime.str_to_obj(frm.doc.custom_mbrt_end_time);
+
+        let diff_ms = end - start;
+
+        if (diff_ms < 0) {
+            frm.set_value('custom_total_mbrt_time', '');
+            frappe.msgprint(__('End Time cannot be before Start Time'));
+            return;
+        }
+
+        // Duration expects SECONDS
+        let total_seconds = diff_ms / 1000;
+
+        frm.set_value('custom_total_mbrt_time', total_seconds);
+    }
+}
