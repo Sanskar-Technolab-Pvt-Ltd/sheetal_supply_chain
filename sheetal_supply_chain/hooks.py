@@ -47,6 +47,7 @@ doctype_js = {
     "Purchase Receipt" : "public/js/purchase_receipt.js",
     "Quality Inspection" : "public/js/quality_inspection.js",
     "Stock Entry" : "public/js/stock_entry.js",
+    "Work Order" : "public/js/work_order.js",
 
 
     }
@@ -159,7 +160,7 @@ doc_events = {
   
 
 	},
- "Purchase Receipt": {
+	"Purchase Receipt": {
 		# "validate": "sheetal_supply_chain.py.purchase_receipt.validate_purchase_receipt",
 		"before_save": "sheetal_supply_chain.py.purchase_receipt.validate_milk_type_with_supplier_profile",
 		"on_submit": "sheetal_supply_chain.py.purchase_receipt.create_mqle_on_pr_submit",
@@ -167,7 +168,7 @@ doc_events = {
       	"validate": "sheetal_supply_chain.py.purchase_receipt.set_milk_pricing_on_items",
 	},
 
-	 "Stock Entry": {
+	"Stock Entry": {
 		"on_submit": [
       					"sheetal_supply_chain.py.stock_entry.create_mqle_on_se_submit",
 						"sheetal_supply_chain.py.stock_entry.create_mqle_for_raw_materials",
@@ -181,12 +182,15 @@ doc_events = {
 	},
 
 
-	 "BOM": {
+	"BOM": {
     		"before_save": "sheetal_supply_chain.py.bom.set_fat_snf_on_first_save",
     		"on_update": "sheetal_supply_chain.py.bom.set_bom_totals",
-      
+	},
 
-      
+	"Work Order": {
+    		"before_save": "sheetal_supply_chain.py.work_order.fetch_bom_fat_snf_for_work_order",
+            "on_update": "sheetal_supply_chain.py.work_order.set_work_order_totals",
+
 	},
 
 }
