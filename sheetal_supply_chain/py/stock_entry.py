@@ -447,7 +447,7 @@ def cancel_mqle_on_se_cancel(doc, method=None):
             mqle_doc.cancel()
 
 
-# ! Calculate and set total quantity, total FAT/SNF percentages, total FAT/SNF KG, and weighted FAT/SNF percentages on Stock Entry
+# ! # Fetch FAT & SNF percentages from BOM items and calculate corresponding FAT/SNF kg values for Stock Entry required items based on required quantity
 def fetch_bom_fat_snf_for_manufacture(doc, method=None):
     if doc.stock_entry_type != "Manufacture":
         return
@@ -484,9 +484,13 @@ def fetch_bom_fat_snf_for_manufacture(doc, method=None):
         row.custom_snf_kg = (snf_per * qty) / 100
 
 
-# Calculates and sets total quantity, FAT/SNF percentages, and FAT/SNF weights on Stock Entry based on item-level values.
-
+#! Calculates and sets total quantity, FAT/SNF percentages, and FAT/SNF weights on Stock Entry based on item-level values.
 def set_stock_entry_totals(doc, method=None):
+
+    #  Recursion guard (ADD THIS AT TOP)
+    if getattr(doc, "_stock_entry_totals_saved", False):
+        return
+
     # Initialize safely
     total_qty = 0.0
     total_fat_per = 0.0
@@ -503,10 +507,16 @@ def set_stock_entry_totals(doc, method=None):
         doc.custom_total_snf_kg = 0
         doc.custom_fat_percentage = 0
         doc.custom_snf_percentage = 0
+
+        # flag + save before return
+        doc._stock_entry_totals_saved = True
+        doc.save(ignore_permissions=True)
         return
 
     for item in doc.items:
-        # Defensive access (no AttributeError)
+        if flt(getattr(item, "is_finished_item", 0)):
+            continue
+
         qty = flt(getattr(item, "qty", 0))
         fat = flt(getattr(item, "custom_fat", 0))
         snf = flt(getattr(item, "custom_snf", 0))
@@ -519,14 +529,14 @@ def set_stock_entry_totals(doc, method=None):
         total_fat_kg += fat_kg
         total_snf_kg += snf_kg
 
-    # Set totals (same fields, same meaning)
+    # Set totals
     doc.custom_total_quantity = flt(total_qty)
     doc.custom_total_fat_percentage = flt(total_fat_per)
     doc.custom_total_snf_percentage = flt(total_snf_per)
     doc.custom_total_fat_kg = flt(total_fat_kg)
     doc.custom_total_snf_kg = flt(total_snf_kg)
 
-    # Final percentage calculation (same logic)
+    # Final percentage calculation
     if total_qty:
         doc.custom_fat_percentage = flt((total_fat_kg / total_qty) * 100)
         doc.custom_snf_percentage = flt((total_snf_kg / total_qty) * 100)
@@ -534,9 +544,17 @@ def set_stock_entry_totals(doc, method=None):
         doc.custom_fat_percentage = 0
         doc.custom_snf_percentage = 0
 
+    # Set flag BEFORE save
+    doc._stock_entry_totals_saved = True
+
+    # Persist values
+    doc.save(ignore_permissions=True)
 
 
-# Auto-generates a date-wise sequential Production Order number for Manufacture Stock Entries, reusing cancelled numbers where possible.
+
+
+#! Auto-generates a date-wise sequential Production Order number for Manufacture Stock Entries, reusing cancelled numbers where possible.
+
 def generate_production_order(doc, method=None):
 
     if doc.stock_entry_type != "Manufacture":
