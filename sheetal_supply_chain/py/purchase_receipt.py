@@ -439,3 +439,97 @@ def set_milk_pricing_on_items(doc, method=None):
             item.rate = item.milk_final_rate
             item.amount = item.milk_final_amount
 
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_allowed_uoms_for_item(doctype, txt, searchfield, start, page_len, filters):
+    """
+    Custom query to return only allowed UOMs for an item
+    This is called by the Link field dropdown
+    """
+    item_code = filters.get('item_code')
+    
+    if not item_code:
+        return []
+    
+    # Get stock UOM (always allowed)
+    item = frappe.get_cached_doc('Item', item_code)
+    stock_uom = item.stock_uom
+    
+    # Build SQL query to get UOMs from UOM Conversion Detail
+    query = """
+        SELECT DISTINCT uom as value, uom as description
+        FROM `tabUOM Conversion Detail`
+        WHERE parent = %(item_code)s
+        AND parenttype = 'Item'
+        AND docstatus < 2
+        AND uom LIKE %(txt)s
+        
+        UNION
+        
+        SELECT %(stock_uom)s as value, %(stock_uom)s as description
+        WHERE %(stock_uom)s LIKE %(txt)s
+        
+        ORDER BY value
+        LIMIT %(page_len)s OFFSET %(start)s
+    """
+    
+    return frappe.db.sql(query, {
+        'item_code': item_code,
+        'stock_uom': stock_uom,
+        'txt': f'%{txt}%',
+        'start': start,
+        'page_len': page_len
+    })
+
+
+@frappe.whitelist()
+def validate_item_uom(item_code, uom):
+    """
+    Validate if a UOM is allowed for an item
+    Returns: dict with 'valid' boolean and optional 'message'
+    """
+    if not item_code or not uom:
+        return {'valid': False, 'message': _('Item Code and UOM are required')}
+    
+    # Get item details
+    item = frappe.get_cached_doc('Item', item_code)
+    
+    # Stock UOM is always valid
+    if item.stock_uom == uom:
+        return {'valid': True}
+    
+    # Check if UOM exists in conversion table
+    uom_exists = frappe.db.exists('UOM Conversion Detail', {
+        'parent': item_code,
+        'parenttype': 'Item',
+        'uom': uom,
+        'docstatus': ['<', 2]
+    })
+    
+    if uom_exists:
+        return {'valid': True}
+    
+    # Get list of allowed UOMs for error message
+    allowed_uoms = frappe.db.sql_list("""
+        SELECT DISTINCT uom
+        FROM `tabUOM Conversion Detail`
+        WHERE parent = %s
+        AND parenttype = 'Item'
+        AND docstatus < 2
+        ORDER BY uom
+    """, item_code)
+    
+    # Add stock UOM to the list
+    if item.stock_uom not in allowed_uoms:
+        allowed_uoms.insert(0, item.stock_uom)
+    
+    return {
+        'valid': False,
+        'message': _('UOM <b>{0}</b> is not allowed for Item <b>{1}</b>.<br><br>Allowed UOMs: <b>{2}</b>').format(
+            uom, 
+            item_code, 
+            ', '.join(allowed_uoms) if allowed_uoms else 'None'
+        )
+    }
