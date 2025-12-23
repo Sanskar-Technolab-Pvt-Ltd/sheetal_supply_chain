@@ -487,10 +487,6 @@ def fetch_bom_fat_snf_for_manufacture(doc, method=None):
 #! Calculates and sets total quantity, FAT/SNF percentages, and FAT/SNF weights on Stock Entry based on item-level values.
 def set_stock_entry_totals(doc, method=None):
 
-    #  Recursion guard (ADD THIS AT TOP)
-    if getattr(doc, "_stock_entry_totals_saved", False):
-        return
-
     # Initialize safely
     total_qty = 0.0
     total_fat_per = 0.0
@@ -508,9 +504,6 @@ def set_stock_entry_totals(doc, method=None):
         doc.custom_fat_percentage = 0
         doc.custom_snf_percentage = 0
 
-        # flag + save before return
-        doc._stock_entry_totals_saved = True
-        doc.save(ignore_permissions=True)
         return
 
     for item in doc.items:
@@ -529,6 +522,7 @@ def set_stock_entry_totals(doc, method=None):
         total_fat_kg += fat_kg
         total_snf_kg += snf_kg
 
+
     # Set totals
     doc.custom_total_quantity = flt(total_qty)
     doc.custom_total_fat_percentage = flt(total_fat_per)
@@ -544,11 +538,6 @@ def set_stock_entry_totals(doc, method=None):
         doc.custom_fat_percentage = 0
         doc.custom_snf_percentage = 0
 
-    # Set flag BEFORE save
-    doc._stock_entry_totals_saved = True
-
-    # Persist values
-    doc.save(ignore_permissions=True)
 
 
 

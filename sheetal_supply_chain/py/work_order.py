@@ -42,16 +42,12 @@ def fetch_bom_fat_snf_for_work_order(doc, method=None):
 #! Calculates and sets total quantity, FAT/SNF percentages, and FAT/SNF weights on Work Order based on item-level values.
 def set_work_order_totals(doc, method=None):
 
-    # Recursion guard (ADD THIS AT THE TOP)
-    if getattr(doc, "_work_order_totals_saved", False):
-        return
-
     # Initialize safely
     total_qty = 0.0
     total_fat_per = 0.0
     total_snf_per = 0.0
     total_fat_kg = 0.0
-    total_snf_kg = 0.0
+    total_snf_kg = 0.0 
 
     # If required_items table is empty or not loaded
     if not getattr(doc, "required_items", None):
@@ -63,9 +59,7 @@ def set_work_order_totals(doc, method=None):
         doc.custom_fat_percentage = 0
         doc.custom_snf_percentage = 0
         
-        # Set flag + save before return
-        doc._work_order_totals_saved = True
-        doc.save(ignore_permissions=True)
+        
         return
 
     for item in doc.required_items:
@@ -95,8 +89,3 @@ def set_work_order_totals(doc, method=None):
     else:
         doc.custom_fat_percentage = 0
         doc.custom_snf_percentage = 0
-
-    # Set flag BEFORE save (ADD THIS)
-    doc._work_order_totals_saved = True
-    # Persist values (ADD THIS AT VERY END)
-    doc.save(ignore_permissions=True)
