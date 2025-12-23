@@ -44,19 +44,20 @@ frappe.ui.form.on("Stock Entry Detail", {
 frappe.ui.form.on("Stock Entry", {
     
     refresh(frm) {
+        
         frm.doc.items.forEach(item => {
             if (item.is_finished_item == 1 && item.quality_inspection) {
                 fetch_fat_snf_stock_entry(frm, item.doctype, item.name);
             }
         });
 
-
+        
         if (frm.doc.docstatus === 1) {
             frm.add_custom_button("Milk Ledger", function () {
                 open_milk_quality_ledger(frm);  
             }, __("View"));
         }
-
+        
         // ! calculate Stock entry Total
         // calculate_stock_entry_totals(frm);
     },
@@ -191,9 +192,15 @@ function calculate_stock_entry_totals(frm) {
     if (!frm.doc || !frm.doc.items) return;
 
     frm.doc.items.forEach(item => {
+
+        if (item.is_finished_item) {
+            return;
+        }
+
         total_qty += flt(item.qty) || 0;
         total_fat_kg += flt(item.custom_fat_kg) || 0;
         total_snf_kg += flt(item.custom_snf_kg) || 0;
+        
     });
 
     frm.set_value("custom_total_quantity", total_qty);

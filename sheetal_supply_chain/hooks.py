@@ -176,8 +176,8 @@ doc_events = {
       					"sheetal_supply_chain.py.stock_entry.generate_production_order",
                 	 ],
     	"on_cancel": "sheetal_supply_chain.py.stock_entry.cancel_mqle_on_se_cancel",
-    	"before_save": "sheetal_supply_chain.py.stock_entry.fetch_bom_fat_snf_for_manufacture",
-        "on_update": "sheetal_supply_chain.py.stock_entry.set_stock_entry_totals",
+    	"before_save": ["sheetal_supply_chain.py.stock_entry.fetch_bom_fat_snf_for_manufacture","sheetal_supply_chain.py.stock_entry.set_stock_entry_totals"],
+        # "on_update": "sheetal_supply_chain.py.stock_entry.set_stock_entry_totals",
       
 	},
 
@@ -188,10 +188,16 @@ doc_events = {
 	},
 
 	"Work Order": {
-    		"before_save": "sheetal_supply_chain.py.work_order.fetch_bom_fat_snf_for_work_order",
-            "on_update": "sheetal_supply_chain.py.work_order.set_work_order_totals",
+    		"before_save": [
+						"sheetal_supply_chain.py.work_order.fetch_bom_fat_snf_for_work_order",
+						"sheetal_supply_chain.py.work_order.set_work_order_totals"
+          ],
 
 	},
+ 
+     "Item": {
+        "autoname": "sheetal_supply_chain.py.item.set_item_series",
+    },
 
 }
 
