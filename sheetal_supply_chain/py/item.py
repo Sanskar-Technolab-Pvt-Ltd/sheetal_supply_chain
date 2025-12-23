@@ -2,13 +2,21 @@ import frappe
 import re
 
 def make_abbr(name):
-    """
-    Convert 'Raw Material' → 'RM'
-    """
+
     if not name:
         return ""
+
     words = re.split(r"\s+", name.strip())
-    return "".join(word[0] for word in words if word).upper()
+    abbr = ""
+
+    for word in words:
+        # Find first alphabet character in the word
+        match = re.search(r"[A-Za-z]", word)
+        if match:
+            abbr += match.group(0).upper()
+
+    return abbr
+
 
 
 def set_item_series(doc, method=None):
