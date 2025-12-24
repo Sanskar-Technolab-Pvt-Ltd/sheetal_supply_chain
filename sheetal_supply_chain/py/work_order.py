@@ -4,10 +4,11 @@ from frappe.utils import flt
 
 # Fetch FAT & SNF percentages from BOM items and calculate corresponding FAT/SNF kg values for Work Order required items based on required quantity
 def fetch_bom_fat_snf_for_work_order(doc, method=None):
-    if not doc.bom_no:
+    
+    if not doc.is_new():
         return
 
-    if not doc.required_items:
+    if not doc.bom_no or not doc.required_items:
         return
 
     # Fetch BOM item FAT & SNF %
@@ -81,11 +82,13 @@ def set_work_order_totals(doc, method=None):
     doc.custom_total_snf_percentage = flt(total_snf_per,3)
     doc.custom_total_fat_kg = flt(total_fat_kg,3)
     doc.custom_total_snf_kg = flt(total_snf_kg,3)
-
+    
     # Final weighted percentage calculation
-    if total_qty:
-        doc.custom_fat_percentage = flt((total_fat_kg / total_qty) * 100,3)
-        doc.custom_snf_percentage = flt((total_snf_kg / total_qty) * 100, 3)
+    if doc.custom_total_quantity:
+        doc.custom_fat_percentage = flt(
+            (doc.custom_total_fat_kg / doc.custom_total_quantity) * 100, 3)
+        doc.custom_snf_percentage = flt(
+            (doc.custom_total_snf_kg / doc.custom_total_quantity) * 100, 3)
     else:
         doc.custom_fat_percentage = 0
         doc.custom_snf_percentage = 0
