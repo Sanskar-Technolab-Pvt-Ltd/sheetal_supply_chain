@@ -100,7 +100,9 @@ def make_quality_inspections(doctype, docname, items, inspection_type):
                 "item_serial_no": item.get("serial_no").split("\n")[0] if item.get("serial_no") else None,
                 "batch_no": item.get("batch_no"),
                 "child_row_reference": item.get("child_row_reference"),
-                "custom_warehouse": warehouse,   # <-- FIXED
+                "custom_warehouse": warehouse,   
+                "custom_supplier_code": pr_doc.custom_supplier_code,  
+
             }
 
             qi = frappe.get_doc(qi_doc)
