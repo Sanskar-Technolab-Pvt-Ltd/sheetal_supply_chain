@@ -129,6 +129,7 @@ frappe.ui.form.on("Quality Inspection Reading", {
 });
 
 
+//? Get MBRT setting from item and apply it only the first time
 
 function fetch_mbrt_from_item(frm) {
     // Safety checks
@@ -155,6 +156,7 @@ function fetch_mbrt_from_item(frm) {
     );
 }
 
+//? Calculate and set total MBRT time from start and end timestamps
 
 function calculate_total_time(frm) {
     if (frm.doc.custom_mbrt_start_time && frm.doc.custom_mbrt_end_time) {

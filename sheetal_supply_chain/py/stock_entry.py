@@ -155,7 +155,7 @@ def create_mqle_on_se_submit(doc, method=None):
 
 
 
-# ! Create MQLE entries for milk items during Material Issue Stock Entry using last recorded milk quality
+# ! Create MQLE entries for raw-materialmilk items during Manufacture Stock Entry using last recorded milk quality
 def create_mqle_for_raw_materials(doc, method=None):
     """
     Create MQLE for raw material milk items on Stock Entry Submit
@@ -540,8 +540,6 @@ def set_stock_entry_totals(doc, method=None):
 
 
 
-
-
 #! Auto-generates a date-wise sequential Production Order number for Manufacture Stock Entries, reusing cancelled numbers where possible.
 
 def generate_production_order(doc, method=None):
@@ -623,3 +621,47 @@ def generate_production_order(doc, method=None):
         f"{prefix}{str(next_no).zfill(5)}",
         update_modified=False
     )
+
+
+
+#! Fetch FAT/SNF from the latest MQLE for each material issue item which has Maintain FAT-SNF enabled and calculate FAT/SNF (kg) before saving Stock Entry
+
+def set_fat_snf_from_last_mqle_for_mi(doc, method=None):
+
+    # Run only for Material Issue
+    if doc.stock_entry_type != "Material Issue":
+        return
+
+    for row in doc.items:
+
+        if not row.custom_maintain_fat_snf:
+            continue
+
+        warehouse = row.s_warehouse
+        if not warehouse:
+            continue
+
+        qty = flt(row.qty)
+
+        # ---- Fetch last MQLE ----
+        last_mqle = frappe.db.get_value(
+            "Milk Quality Ledger Entry",
+            {
+                "item_code": row.item_code,
+                "warehouse": warehouse,
+                "docstatus": 1
+            },
+            ["fat_per", "snf_per"],
+            order_by="creation desc",
+            as_dict=True
+        )
+
+        fat_per = flt(last_mqle.fat_per) if last_mqle else 0
+        snf_per = flt(last_mqle.snf_per) if last_mqle else 0
+
+        # ---- Calculate ----
+        row.custom_fat = fat_per
+        row.custom_snf = snf_per
+
+        row.custom_fat_kg = qty * fat_per / 100
+        row.custom_snf_kg = qty * snf_per / 100

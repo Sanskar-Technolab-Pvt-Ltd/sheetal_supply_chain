@@ -2,7 +2,7 @@ import frappe
 from frappe.utils import flt
 
 
-# Fetch FAT & SNF percentages from BOM items and calculate corresponding FAT/SNF kg values for Work Order required items based on required quantity
+#! Fetch FAT & SNF percentages from BOM items and calculate corresponding FAT/SNF kg values for Work Order required items based on required quantity
 def fetch_bom_fat_snf_for_work_order(doc, method=None):
     
     if not doc.is_new():

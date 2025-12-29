@@ -157,15 +157,17 @@ doc_events = {
 		"on_update": "sheetal_supply_chain.py.quality_inspection.qi_reading",
 		"on_submit": "sheetal_supply_chain.py.quality_inspection.create_mqle_on_qi_submit",
 		"on_cancel": "sheetal_supply_chain.py.quality_inspection.cancel_mqle_on_qi_cancel",
-  
-
 	},
 	"Purchase Receipt": {
 		# "validate": "sheetal_supply_chain.py.purchase_receipt.validate_purchase_receipt",
 		"before_save": "sheetal_supply_chain.py.purchase_receipt.validate_milk_type_with_supplier_profile",
 		"on_submit": "sheetal_supply_chain.py.purchase_receipt.create_mqle_on_pr_submit",
   		"on_cancel": "sheetal_supply_chain.py.purchase_receipt.cancel_mqle_on_pr_cancel",
-      	"validate": "sheetal_supply_chain.py.purchase_receipt.set_milk_pricing_on_items",
+      	"validate": [
+           "sheetal_supply_chain.py.purchase_receipt.set_milk_pricing_on_items",
+           "sheetal_supply_chain.py.purchase_receipt.validate_only_one_item_warehouse",
+                    ]
+      	# "before_submit": "sheetal_supply_chain.py.purchase_receipt.validate_only_one_item_warehouse",  
 	},
 
 	"Stock Entry": {
@@ -176,11 +178,14 @@ doc_events = {
       					"sheetal_supply_chain.py.stock_entry.generate_production_order",
                 	 ],
     	"on_cancel": "sheetal_supply_chain.py.stock_entry.cancel_mqle_on_se_cancel",
-    	"before_save": ["sheetal_supply_chain.py.stock_entry.fetch_bom_fat_snf_for_manufacture","sheetal_supply_chain.py.stock_entry.set_stock_entry_totals"],
+    	"before_save": [
+         "sheetal_supply_chain.py.stock_entry.fetch_bom_fat_snf_for_manufacture",
+         "sheetal_supply_chain.py.stock_entry.set_stock_entry_totals",
+         "sheetal_supply_chain.py.stock_entry.set_fat_snf_from_last_mqle_for_mi",
+         ],
         # "on_update": "sheetal_supply_chain.py.stock_entry.set_stock_entry_totals",
       
 	},
-
 
 	"BOM": {
     		"before_save": "sheetal_supply_chain.py.bom.set_fat_snf_on_first_save",
@@ -190,13 +195,12 @@ doc_events = {
 	"Work Order": {
     		"before_save": [
 						"sheetal_supply_chain.py.work_order.fetch_bom_fat_snf_for_work_order",
-						"sheetal_supply_chain.py.work_order.set_work_order_totals"
+						"sheetal_supply_chain.py.work_order.set_work_order_totals",
           ],
-
 	},
  
      "Item": {
-        "autoname": "sheetal_supply_chain.py.item.set_item_series",
+    	"autoname": "sheetal_supply_chain.py.item.set_item_series",
     },
 
 }

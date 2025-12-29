@@ -334,3 +334,56 @@ def build_row(e, filters):
             "snf_per": 0.0,
             "snf": 0.0,
         }
+        
+        
+#? Return unique item codes present in Milk Quality Ledger Entry.
+         
+@frappe.whitelist()
+def get_items_from_milk_quality_ledger(txt=None):
+    txt = txt or ""
+
+    return frappe.db.sql("""
+        SELECT DISTINCT item_code AS value
+        FROM `tabMilk Quality Ledger Entry`
+        WHERE item_code IS NOT NULL
+          AND item_code LIKE %(txt)s
+        ORDER BY item_code
+        LIMIT 50
+    """, {
+        "txt": f"%{txt}%"
+    }, as_dict=True)
+
+
+
+#? Fetch unique warehouses from Milk Quality Ledger Entry for dropdown selection.
+
+@frappe.whitelist()
+def get_warehouses_from_milk_quality_ledger(txt=None, company=None):
+    txt = txt or ""
+
+    conditions = ["warehouse IS NOT NULL", "warehouse LIKE %(txt)s"]
+    params = {"txt": f"%{txt}%"}
+
+    if company:
+        conditions.append("company = %(company)s")
+        params["company"] = company
+
+    return frappe.db.sql(f"""
+        SELECT DISTINCT warehouse AS value
+        FROM `tabMilk Quality Ledger Entry`
+        WHERE {" AND ".join(conditions)}
+        ORDER BY warehouse
+        LIMIT 50
+    """, params, as_dict=True)
+
+
+
+#? Fetch a distinct list of voucher types from Milk Quality Ledger entries for use in filters or dropdown selections.
+
+@frappe.whitelist()
+def get_allowed_voucher_types():
+    return frappe.db.sql_list("""
+        SELECT DISTINCT voucher_type
+        FROM `tabMilk Quality Ledger Entry`
+        WHERE voucher_type IS NOT NULL
+    """)

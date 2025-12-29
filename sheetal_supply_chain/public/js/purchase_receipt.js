@@ -76,8 +76,7 @@ frappe.ui.form.on("Purchase Receipt Item", {
     },
 
 
-// Capacity Logic 
-
+// Actual Qty Logic
     item_code(frm, cdt, cdn) {
         setTimeout(() => {
             set_actual_qty_from_bin(frm, cdt, cdn);
@@ -181,7 +180,7 @@ function open_milk_quality_ledger(frm) {
 
 
 
-// Capacity Logic 
+//! Set actual stock quantity from Bin and convert to selected UOM if required
 
 async function set_actual_qty_from_bin(frm, cdt, cdn) {
     let row = locals[cdt][cdn];
