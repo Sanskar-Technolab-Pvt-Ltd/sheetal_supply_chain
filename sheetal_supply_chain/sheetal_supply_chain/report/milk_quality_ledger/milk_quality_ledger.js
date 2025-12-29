@@ -1,7 +1,3 @@
-// milk_quality_ledger.js
-// Client-side filters & formatter for "Milk Quality Ledger" report
-// Enhanced with validation, error handling, and better UX
-
 frappe.query_reports["Milk Quality Ledger"] = {
 	filters: [
 		{
@@ -64,29 +60,22 @@ frappe.query_reports["Milk Quality Ledger"] = {
 			fieldtype: "MultiSelectList",
 			get_data(txt) {
 				return frappe.call({
-					method: "frappe.desk.search.search_link",
+					method: "sheetal_supply_chain.sheetal_supply_chain.report.milk_quality_ledger.milk_quality_ledger.get_items_from_milk_quality_ledger",
 					args: {
-						doctype: "Item",
-						txt: txt || "",
-						page_length: 50,
-						filters: {
-							disabled: 0
-						}
+						txt: txt
 					}
 				}).then(r => {
-					if (r && r.message) {
-						return r.message.map(d => ({
-							value: d.value,
-							description: d.description || ""
-						}));
-					}
-					return [];
+					return (r.message || []).map(d => ({
+						value: d.value,
+						description: ""
+					}));
 				}).catch(err => {
-					console.error("Error fetching items:", err);
+					console.error("Error fetching ledger items:", err);
 					return [];
 				});
 			}
 		},
+		
 		{
 			fieldname: "item_group",
 			label: __("Item Group"),
@@ -117,33 +106,46 @@ frappe.query_reports["Milk Quality Ledger"] = {
 			label: __("Warehouses"),
 			fieldtype: "MultiSelectList",
 			get_data(txt) {
-				const company = frappe.query_report.get_filter_value("company");
-				
-				return frappe.db.get_link_options("Warehouse", txt, {
-					company: company || "",
-					disabled: 0
-				}).then(options => {
-					return options || [];
-				}).catch(err => {
-					console.error("Error fetching warehouses:", err);
-					return [];
+				return frappe.call({
+					method: "sheetal_supply_chain.sheetal_supply_chain.report.milk_quality_ledger.milk_quality_ledger.get_warehouses_from_milk_quality_ledger",
+					args: {
+						txt: txt,
+						company: frappe.query_report.get_filter_value("company")
+					}
+				}).then(r => {
+					return (r.message || []).map(d => ({
+						value: d.value,
+						description: d.value  
+					}));
 				});
 			}
-		},
+		},		
 		{
 			fieldname: "voucher_type",
 			label: __("Voucher Type"),
 			fieldtype: "Link",
 			options: "DocType",
 			get_query() {
+				let voucher_types = [];
+		
+				//Synchronous call is required for get_query
+				frappe.call({
+					method: "sheetal_supply_chain.sheetal_supply_chain.report.milk_quality_ledger.milk_quality_ledger.get_allowed_voucher_types",
+					async: false,
+					callback: function(r) {
+						voucher_types = r.message || [];
+					}
+				});
+		
 				return {
 					filters: {
-						istable: 0,
-						issingle: 0
+						name: ["in", voucher_types]
 					}
 				};
 			}
 		},
+		
+		
 		{
 			fieldname: "voucher_no",
 			label: __("Voucher No"),
@@ -169,36 +171,6 @@ frappe.query_reports["Milk Quality Ledger"] = {
 		},
 		
 	],
-
-	// onload(report) {
-	// 	// Add custom buttons or actions
-	// 	report.page.add_inner_button(__("Export"), function() {
-	// 		frappe.query_report.export_report();
-	// 	});
-		
-	// 	// Add refresh button with confirmation for large date ranges
-	// 	const original_refresh = report.refresh;
-	// 	report.refresh = function() {
-	// 		const from_date = frappe.query_report.get_filter_value("from_date");
-	// 		const to_date = frappe.query_report.get_filter_value("to_date");
-			
-	// 		if (from_date && to_date) {
-	// 			const date_diff = frappe.datetime.get_day_diff(to_date, from_date);
-				
-	// 			if (date_diff > 365) {
-	// 				frappe.confirm(
-	// 					__("You are requesting data for more than 1 year. This may take some time. Continue?"),
-	// 					() => original_refresh.call(report),
-	// 					() => {}
-	// 				);
-	// 				return;
-	// 			}
-	// 		}
-			
-	// 		original_refresh.call(report);
-	// 	};
-	// },
-
 	formatter(value, row, column, data, default_formatter) {
 		// Apply custom formatting
 		value = default_formatter(value, row, column, data);
@@ -215,17 +187,4 @@ frappe.query_reports["Milk Quality Ledger"] = {
 		
 		return value;
 	},
-
-	// get_datatable_options(options) {
-	// 	// Customize datatable appearance and behavior
-	// 	return Object.assign(options, {
-	// 		checkboxColumn: true,
-	// 		events: {
-	// 			onCheckRow(row) {
-	// 				// Handle row selection
-	// 				console.log("Row selected:", row);
-	// 			}
-	// 		}
-	// 	});
-	// }
 };

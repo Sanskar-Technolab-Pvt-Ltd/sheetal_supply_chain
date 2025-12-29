@@ -1,6 +1,7 @@
 import frappe
 import re
 
+#! Automatically generate and assign an Item Code based on parent and child Item Group abbreviations with a sequential number.
 def make_abbr(name):
 
     if not name:
