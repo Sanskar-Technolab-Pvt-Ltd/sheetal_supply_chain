@@ -440,6 +440,7 @@ def set_milk_pricing_on_items(doc, method=None):
             item.amount = item.milk_final_amount
 
 
+#! Return only the stock UOM and item-specific conversion UOMs for use in UOM link field dropdowns.
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
@@ -484,6 +485,7 @@ def get_allowed_uoms_for_item(doctype, txt, searchfield, start, page_len, filter
     })
 
 
+#! Validate that the selected UOM is permitted for the item based on stock UOM and defined conversions.
 @frappe.whitelist()
 def validate_item_uom(item_code, uom):
     """
@@ -533,3 +535,37 @@ def validate_item_uom(item_code, uom):
             ', '.join(allowed_uoms) if allowed_uoms else 'None'
         )
     }
+    
+
+
+# ! Prevent saving Purchase Receipt if a different item already has stock in a warehouse restricted to one item.
+
+def validate_only_one_item_warehouse(doc, method=None):
+    for row in doc.items:
+        if not row.warehouse or not row.item_code:
+            continue
+
+        # Check warehouse flag
+        if not frappe.db.get_value("Warehouse", row.warehouse, "custom_only_one_item"):
+            continue
+
+        # Check for any other item with stock > 0
+        conflict = frappe.db.sql("""
+            SELECT item_code, actual_qty
+            FROM `tabBin`
+            WHERE warehouse = %s
+              AND actual_qty > 0
+              AND item_code != %s
+            LIMIT 1
+        """, (row.warehouse, row.item_code), as_dict=True)
+
+        if conflict:
+            frappe.throw(_(
+                "Warehouse <b>{0}</b> allows only one item at a time.<br>"
+                "Item <b>{1}</b> already exists with quantity <b>{2}</b> (Stock UOM).<br>"
+                "Please reduce its stock to zero before adding another item."
+            ).format(
+                row.warehouse,
+                conflict[0].item_code,
+                conflict[0].actual_qty
+            ))
