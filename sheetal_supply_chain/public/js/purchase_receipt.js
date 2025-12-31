@@ -5,7 +5,7 @@ frappe.ui.form.on("Purchase Receipt", {
         let second = flt(frm.doc.custom_second_weight);
 
         frm.set_value("custom_net_weight", first - second);
-        frm.set_value("custom_net_weight_litre", frm.doc.custom_net_weight / 1.034);
+        frm.set_value("custom_net_weight_litre", frm.doc.custom_net_weight / 1.0339);
 
 
     },
@@ -105,15 +105,56 @@ frappe.ui.form.on("Purchase Receipt Item", {
 
 
 //! Fetch FAT/SNF percentages and KG values from server using linked Quality Inspection 
+// function fetch_fat_snf(frm, cdt, cdn) {
+//     let row = locals[cdt][cdn];
+//     if (!row.quality_inspection) {
+//         frappe.model.set_value(cdt, cdn, "custom_fat", 0);
+//         frappe.model.set_value(cdt, cdn, "custom_snf", 0);
+//         frappe.model.set_value(cdt, cdn, "custom_fat_kg", 0);
+//         frappe.model.set_value(cdt, cdn, "custom_snf_kg", 0);
+//         return;
+//     }
+//     frappe.call({
+//         method: "sheetal_supply_chain.py.purchase_receipt.update_fat_snf_js",
+//         args: {
+//             qi: row.quality_inspection,
+//             stock_qty: row.stock_qty
+//         },
+//         freeze: true,
+//         freeze_message: __("Fetching QI readings..."),
+
+//         callback(r) {
+//             if (!r.message) return;
+        
+//             // Fix rounding issues (VERY IMPORTANT)
+//             let fat = flt(r.message.fat, 3);
+//             let snf = flt(r.message.snf, 3);
+//             let fat_kg = flt(r.message.fat_kg, 3);
+//             let snf_kg = flt(r.message.snf_kg, 3);
+        
+//             frappe.model.set_value(cdt, cdn, "custom_fat", fat);
+//             frappe.model.set_value(cdt, cdn, "custom_snf", snf);
+//             frappe.model.set_value(cdt, cdn, "custom_fat_kg", fat_kg);
+//             frappe.model.set_value(cdt, cdn, "custom_snf_kg", snf_kg);
+        
+//             frm.refresh_field("items");
+//         }
+        
+//     });
+// }
+ 
 function fetch_fat_snf(frm, cdt, cdn) {
     let row = locals[cdt][cdn];
+
     if (!row.quality_inspection) {
         frappe.model.set_value(cdt, cdn, "custom_fat", 0);
         frappe.model.set_value(cdt, cdn, "custom_snf", 0);
         frappe.model.set_value(cdt, cdn, "custom_fat_kg", 0);
         frappe.model.set_value(cdt, cdn, "custom_snf_kg", 0);
+        frappe.model.set_value(cdt, cdn, "custom_lr", 0); 
         return;
     }
+
     frappe.call({
         method: "sheetal_supply_chain.py.purchase_receipt.update_fat_snf_js",
         args: {
@@ -125,24 +166,24 @@ function fetch_fat_snf(frm, cdt, cdn) {
 
         callback(r) {
             if (!r.message) return;
-        
+
             // Fix rounding issues (VERY IMPORTANT)
             let fat = flt(r.message.fat, 3);
             let snf = flt(r.message.snf, 3);
             let fat_kg = flt(r.message.fat_kg, 3);
             let snf_kg = flt(r.message.snf_kg, 3);
-        
+            let lr = flt(r.message.lr, 3);  
             frappe.model.set_value(cdt, cdn, "custom_fat", fat);
             frappe.model.set_value(cdt, cdn, "custom_snf", snf);
             frappe.model.set_value(cdt, cdn, "custom_fat_kg", fat_kg);
             frappe.model.set_value(cdt, cdn, "custom_snf_kg", snf_kg);
-        
+            frappe.model.set_value(cdt, cdn, "custom_lr", lr);  
+
             frm.refresh_field("items");
         }
-        
     });
 }
- 
+
 
 /**
  * Redirects user to Milk Quality Ledger with auto-filled filters

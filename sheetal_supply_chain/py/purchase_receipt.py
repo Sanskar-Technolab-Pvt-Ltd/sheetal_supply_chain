@@ -4,14 +4,16 @@ from erpnext.stock.utils import get_stock_balance
 from frappe.utils import nowdate, nowtime, flt
 
 
-# ! Fetch latest FAT and SNF values from Quality Inspection and calculate FAT/SNF KG for real-time client-side updates
+# ! Fetch latest FAT, SNF and LR values from Quality Inspection and calculate FAT/SNF KG for real-time client-side updates
 @frappe.whitelist()
 def update_fat_snf_js(qi, stock_qty=None):
-    """Always return fresh FAT/SNF from latest QI, even if previous QI was cancelled."""
+    """Always return fresh FAT/SNF/LR from latest QI, even if previous QI was cancelled."""
     if not qi:
-        return {"fat": 0, "snf": 0, "fat_kg": 0, "snf_kg": 0}
+        return {"fat": 0, "snf": 0, "lr": 0, "fat_kg": 0, "snf_kg": 0}
+
     # Always load fresh QI from database (NO CACHE)
     qi_doc = frappe.get_doc("Quality Inspection", qi)
+
     # Force load fresh child table rows
     readings = frappe.get_all(
         "Quality Inspection Reading",
@@ -19,8 +21,11 @@ def update_fat_snf_js(qi, stock_qty=None):
         fields=["specification", "reading_1"],
         order_by="idx asc",
     )
+
     fat = 0
     snf = 0
+    lr = 0
+
     # Fresh, newly created QI reading will be picked here
     for r in readings:
         spec = (r.specification or "").strip().upper()
@@ -28,33 +33,18 @@ def update_fat_snf_js(qi, stock_qty=None):
             fat = frappe.utils.flt(r.reading_1 or 0)
         if spec in ("S.N.F.", "SNF", "S N F"):
             snf = frappe.utils.flt(r.reading_1 or 0)
+        if spec in ("LR", "L.R.", "LACTOMETER READING"):
+            lr = frappe.utils.flt(r.reading_1 or 0)
+
     stock_qty = frappe.utils.flt(stock_qty or 0)
+
     return {
         "fat": fat,
         "snf": snf,
-        "fat_kg": (fat/100) * stock_qty,
-        "snf_kg": (snf/100) * stock_qty
+        "lr": lr,
+        "fat_kg": (fat / 100) * stock_qty,
+        "snf_kg": (snf / 100) * stock_qty
     }
- 
- 
-# ! Update FAT, SNF, and their KG values on Purchase Receipt items before save based on linked Quality Inspection
-def validate_purchase_receipt(doc, method):
-    """Update FAT/SNF values before saving if QI has changed"""
-    for item in doc.items:
-        if item.quality_inspection:
-            # Get fresh values from QI
-            values = update_fat_snf_js(item.quality_inspection, item.stock_qty)
-            # Update item fields
-            item.custom_fat = values["fat"]
-            item.custom_snf = values["snf"]
-            item.custom_fat_kg = values["fat_kg"]
-            item.custom_snf_kg = values["snf_kg"]
-        else:
-            # Clear values if no QI
-            item.custom_fat = 0
-            item.custom_snf = 0
-            item.custom_fat_kg = 0
-            item.custom_snf_kg = 0
 
 
 # ! Create Milk Quality Ledger Entries (MQLE) on Purchase Receipt submit for milk-type items using post-transaction stock balance
@@ -238,7 +228,7 @@ def get_supplier_milk_profile(supplier: str, custom_milk_type: str):
             "milk_type": custom_milk_type,
             "is_default": 1,
         },
-        ["baseline_fat", "baseline_snf", "base_rate"],
+        ["baseline_fat", "baseline_snf", "baseline_lr", "base_rate"],
         as_dict=True,
     )
     return profile or {}
@@ -256,17 +246,19 @@ def get_milk_type_config(milk_type: str):
         frappe.throw("Milk Type is required to calculate rate.")
     return frappe.get_doc("Milk Type", milk_type)
 
-# ! Calculate milk purchase rate and amount for a Purchase Receipt item based on FAT, SNF, milk type, and supplier rules
+# ! Calculate milk purchase rate and amount for a Purchase Receipt item based on FAT, SNF,LR, milk type, and supplier rules
 @frappe.whitelist()
 def get_milk_rate_for_pr_item(
     supplier: str,
     custom_milk_type: str,
     custom_fat: float,
     custom_snf: float,
+    custom_lr: float,
     weight_kg: float,
 ):
     custom_fat = flt(custom_fat)
     custom_snf = flt(custom_snf)
+    custom_lr = flt(custom_lr)
     weight_kg = flt(weight_kg)
 
     if not supplier:
@@ -288,6 +280,7 @@ def get_milk_rate_for_pr_item(
 
     baseline_fat = flt(profile.get("baseline_fat") or 0)
     baseline_snf = flt(profile.get("baseline_snf") or 0)
+    baseline_lr = flt(profile.get("baseline_lr") or 0)
 
     base_rate = flt(profile.get("base_rate") or 0)
     if not base_rate:
@@ -297,16 +290,22 @@ def get_milk_rate_for_pr_item(
     fat_deduction = 0.0
     snf_addition = 0.0
     snf_deduction = 0.0
+    lr_addition = 0.0
+    lr_deduction = 0.0
+
 
     snf_addition_rate = flt(getattr(mt, "snf_addition", 0))
     snf_deduction_rate = flt(getattr(mt, "snf_deduction", 0))
     fat_addition_rate = flt(getattr(mt, "fat_addition", 0))
     fat_deduction_rate = flt(getattr(mt, "fat_deduction", 0))
+    lr_addition_rate = flt(getattr(mt, "lr_addition", 0))
+    lr_deduction_rate = flt(getattr(mt, "lr_deduction", 0))
+
 
     if mt.base_rate_type == "Per Litre":
         if baseline_fat:
             fat_diff = custom_fat - baseline_fat
-
+                       
             if getattr(mt, "fat_addition_enabled", 0) and fat_diff > 0:
                 fat_addition = fat_diff * fat_addition_rate
 
@@ -342,29 +341,28 @@ def get_milk_rate_for_pr_item(
         }
 
     elif mt.base_rate_type == "Per KG Fat":
-        if baseline_fat:
-            fat_diff = custom_fat - baseline_fat
-
-            if getattr(mt, "fat_addition_enabled", 0) and fat_diff > 0:
-                fat_addition = fat_diff * fat_addition_rate
-
-            if getattr(mt, "fat_deduction_enabled", 0) and fat_diff < 0:
-                fat_deduction = abs(fat_diff) * fat_deduction_rate
 
         if baseline_snf:
             snf_diff = custom_snf - baseline_snf
 
             if getattr(mt, "snf_addition_enabled", 0) and snf_diff > 0:
                 snf_addition = snf_diff * snf_addition_rate
-
+                                
             if getattr(mt, "snf_deduction_enabled", 0) and snf_diff < 0:
                 snf_deduction = abs(snf_diff) * snf_deduction_rate
+                
+        if baseline_fat:
+            fat_diff = custom_fat - baseline_fat
+                       
+            if getattr(mt, "fat_addition_enabled", 0) and fat_diff > 0:
+                fat_addition = fat_diff * fat_addition_rate
 
-        final_rate_per_kg_fat = base_rate + fat_addition + snf_addition - fat_deduction - snf_deduction
+            if getattr(mt, "fat_deduction_enabled", 0) and fat_diff < 0:
+                fat_deduction = abs(fat_diff) * fat_deduction_rate
 
-        payable_fat_kg = (custom_fat / 100.0) * weight_kg
+        final_rate_per_kg_fat = (base_rate * custom_fat) + snf_addition + fat_addition - snf_deduction - fat_deduction
 
-        amount = payable_fat_kg * final_rate_per_kg_fat
+        amount =  final_rate_per_kg_fat * qty_litre
 
         rate_per_litre_display = amount / qty_litre if qty_litre else 0
 
@@ -380,8 +378,56 @@ def get_milk_rate_for_pr_item(
             "snf_addition": snf_addition,
             "snf_deduction": snf_deduction,
             "rate_type": "Per KG Fat",
-            "payable_fat_kg": payable_fat_kg,
+            "payable_fat_kg": 0,
             "rate_per_litre_display": rate_per_litre_display,
+        }
+    
+    elif mt.base_rate_type == "Per LR":
+        if baseline_fat:
+            fat_diff = custom_fat - baseline_fat
+
+            if getattr(mt, "fat_addition_enabled", 0) and fat_diff > 0:
+                fat_addition = fat_diff * fat_addition_rate
+                
+            if getattr(mt, "fat_deduction_enabled", 0) and fat_diff < 0:
+                fat_deduction = abs(fat_diff) * fat_deduction_rate
+
+
+        if baseline_snf:
+            snf_diff = custom_snf - baseline_snf
+
+            if getattr(mt, "snf_addition_enabled", 0) and snf_diff > 0:
+                snf_addition = snf_diff * snf_addition_rate
+
+            if getattr(mt, "snf_deduction_enabled", 0) and snf_diff < 0:
+                snf_deduction = abs(snf_diff) * snf_deduction_rate
+        
+        if baseline_lr:
+            lr_diff = custom_lr - baseline_lr
+
+            if getattr(mt, "lr_addition_enabled", 0) and lr_diff > 0:
+                lr_addition = lr_diff * lr_addition_rate
+
+            if getattr(mt, "lr_deduction_enabled", 0) and lr_diff < 0:
+                lr_deduction = abs(lr_diff) * lr_deduction_rate
+
+        final_rate = base_rate + fat_addition + snf_addition + lr_addition - fat_deduction - snf_deduction - lr_deduction
+        amount = final_rate * qty_litre
+
+        return {
+            "custom_snf": custom_snf,
+            "qty_litre": qty_litre,
+            "kg_per_litre": kg_per_litre,
+            "final_rate": final_rate,
+            "amount": amount,
+            "base_rate": base_rate,
+            "fat_addition": fat_addition,
+            "fat_deduction": fat_deduction,
+            "snf_addition": snf_addition,
+            "snf_deduction": snf_deduction,
+            "rate_type": "Per LR",
+            "payable_fat_kg": 0,
+            "rate_per_litre_display": final_rate,
         }
 
     else:
@@ -413,6 +459,7 @@ def set_milk_pricing_on_items(doc, method=None):
             custom_milk_type=item.custom_milk_type,
             custom_fat=item.custom_fat,
             custom_snf=item.custom_snf,
+            custom_lr=item.custom_lr,
             weight_kg=weight_kg,
         )
 
@@ -432,12 +479,13 @@ def set_milk_pricing_on_items(doc, method=None):
         item.milk_payable_fat_kg = flt(res.get("payable_fat_kg"), 3)
         item.milk_rate_per_litre_display = flt(res.get("rate_per_litre_display"), 3)
 
-        if item.milk_rate_type == "Per Litre":
-            item.rate = item.milk_final_rate
-            item.amount = flt(item.qty * item.rate, 2)
-        else:
-            item.rate = item.milk_final_rate
-            item.amount = item.milk_final_amount
+        # if item.milk_rate_type == "Per Litre":
+        item.rate = item.milk_final_rate
+        item.amount = flt(item.qty * item.rate)
+        # else:
+        #     item.rate = item.milk_final_rate
+        #     item.amount = item.milk_final_amount
+
 
 
 #! Return only the stock UOM and item-specific conversion UOMs for use in UOM link field dropdowns.
