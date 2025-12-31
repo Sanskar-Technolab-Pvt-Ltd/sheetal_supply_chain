@@ -13,11 +13,15 @@
   "snf_addition",
   "snf_deduction_enabled",
   "snf_deduction",
+  "lr_addition_enabled",
+  "lr_addition",
   "column_break_elnq",
   "fat_addition_enabled",
   "fat_addition",
   "fat_deduction_enabled",
-  "fat_deduction"
+  "fat_deduction",
+  "lr_deduction_enabled",
+  "lr_deduction"
  ],
  "fields": [
   {
@@ -31,7 +35,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Base Rate Type",
-   "options": "\nPer Litre\nPer KG Fat"
+   "options": "\nPer Litre\nPer KG Fat\nPer LR"
   },
   {
    "default": "0",
@@ -92,12 +96,38 @@
    "fieldname": "snf_addition_enabled",
    "fieldtype": "Check",
    "label": "Enable SNF Addition"
+  },
+  {
+   "default": "0",
+   "fieldname": "lr_addition_enabled",
+   "fieldtype": "Check",
+   "label": "Enable LR Addition"
+  },
+  {
+   "default": "0",
+   "fieldname": "lr_deduction_enabled",
+   "fieldtype": "Check",
+   "label": " Enable LR Deduction"
+  },
+  {
+   "depends_on": "lr_addition_enabled",
+   "fieldname": "lr_addition",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "LR Addition per 0.1"
+  },
+  {
+   "depends_on": "lr_deduction_enabled",
+   "fieldname": "lr_deduction",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "LR Deduction per 0.1"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-09 15:29:06.361910",
+ "modified": "2025-12-29 17:10:47.307638",
  "modified_by": "Administrator",
  "module": "Sheetal Supply Chain",
  "name": "Milk Type",

@@ -159,7 +159,6 @@ doc_events = {
 		"on_cancel": "sheetal_supply_chain.py.quality_inspection.cancel_mqle_on_qi_cancel",
 	},
 	"Purchase Receipt": {
-		# "validate": "sheetal_supply_chain.py.purchase_receipt.validate_purchase_receipt",
 		"before_save": "sheetal_supply_chain.py.purchase_receipt.validate_milk_type_with_supplier_profile",
 		"on_submit": "sheetal_supply_chain.py.purchase_receipt.create_mqle_on_pr_submit",
   		"on_cancel": "sheetal_supply_chain.py.purchase_receipt.cancel_mqle_on_pr_cancel",
@@ -188,15 +187,15 @@ doc_events = {
 	},
 
 	"BOM": {
-    		"before_save": "sheetal_supply_chain.py.bom.set_fat_snf_on_first_save",
-    		"on_update": "sheetal_supply_chain.py.bom.set_bom_totals",
+		"before_save": "sheetal_supply_chain.py.bom.set_fat_snf_on_first_save",
+		"on_update": "sheetal_supply_chain.py.bom.set_bom_totals",
 	},
 
 	"Work Order": {
-    		"before_save": [
-						"sheetal_supply_chain.py.work_order.fetch_bom_fat_snf_for_work_order",
-						"sheetal_supply_chain.py.work_order.set_work_order_totals",
-          ],
+		"before_save": [
+					"sheetal_supply_chain.py.work_order.fetch_bom_fat_snf_for_work_order",
+					"sheetal_supply_chain.py.work_order.set_work_order_totals",
+					],
 	},
  
      "Item": {
