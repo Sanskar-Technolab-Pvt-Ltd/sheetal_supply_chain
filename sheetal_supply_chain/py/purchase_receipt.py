@@ -11,7 +11,7 @@ def update_fat_snf_js(qi, stock_qty=None):
     if not qi:
         return {"fat": 0, "snf": 0, "lr": 0, "fat_kg": 0, "snf_kg": 0}
 
-    # Always load fresh QI from database (NO CACHE)
+    # Always load fresh QI from database
     qi_doc = frappe.get_doc("Quality Inspection", qi)
 
     # Force load fresh child table rows
@@ -63,9 +63,8 @@ def create_mqle_on_pr_submit(doc, method=None):
             continue
         
 
-        # -------------------------------
         # Get balance AFTER transaction
-        # -------------------------------
+
         stock_qty_after = get_stock_balance(
             item_code=row.item_code,
             warehouse=row.warehouse,
@@ -75,9 +74,9 @@ def create_mqle_on_pr_submit(doc, method=None):
             with_serial_no=False
         )
         
-                # -------------------------------
+            
         #  UOM handling (same as QI)
-        # -------------------------------
+
         stock_uom = frappe.get_cached_value("Item", row.item_code, "stock_uom") or "KG"
         included_uom = "Litre"
 
@@ -96,6 +95,7 @@ def create_mqle_on_pr_submit(doc, method=None):
         mqle = frappe.new_doc("Milk Quality Ledger Entry")
 
         # Basic Details
+        
         mqle.item_code = row.item_code
         mqle.item_name = row.item_name
         mqle.warehouse = row.warehouse

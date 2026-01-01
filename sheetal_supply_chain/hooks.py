@@ -48,6 +48,7 @@ doctype_js = {
     "Quality Inspection" : "public/js/quality_inspection.js",
     "Stock Entry" : "public/js/stock_entry.js",
     "Work Order" : "public/js/work_order.js",
+    "BOM" : "public/js/bom.js",
 
 
     }
