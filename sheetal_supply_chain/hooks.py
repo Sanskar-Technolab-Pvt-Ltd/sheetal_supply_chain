@@ -49,6 +49,7 @@ doctype_js = {
     "Stock Entry" : "public/js/stock_entry.js",
     "Work Order" : "public/js/work_order.js",
     "BOM" : "public/js/bom.js",
+    # "Item" : "public/js/item.js"
 
 
     }
@@ -197,6 +198,10 @@ doc_events = {
 					"sheetal_supply_chain.py.work_order.fetch_bom_fat_snf_for_work_order",
 					"sheetal_supply_chain.py.work_order.set_work_order_totals",
 					],
+  
+		"on_submit": "sheetal_supply_chain.py.work_order.create_batch_on_work_order_submit",
+
+		
 	},
  
      "Item": {
