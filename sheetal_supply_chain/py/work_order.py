@@ -98,122 +98,122 @@ def set_work_order_totals(doc, method=None):
         
   
       
-#! Fetches and returns the Primary UOM configured for the given Item from its UOM Conversion Detail   
-@frappe.whitelist()
-def get_primary_uom_from_item(item_code):
-    if not item_code:
-        return None
+# #! Fetches and returns the Primary UOM configured for the given Item from its UOM Conversion Detail   
+# @frappe.whitelist()
+# def get_primary_uom_from_item(item_code):
+#     if not item_code:
+#         return None
 
-    # Fetch primary UOM from Item UOM Conversion Detail
-    primary_uom = frappe.db.get_value(
-        "UOM Conversion Detail",
-        {
-            "parent": item_code,
-            "parenttype": "Item",
-            "custom_is_primary_uom": 1
-        },
-        "uom"
-    )
+#     # Fetch primary UOM from Item UOM Conversion Detail
+#     primary_uom = frappe.db.get_value(
+#         "UOM Conversion Detail",
+#         {
+#             "parent": item_code,
+#             "parenttype": "Item",
+#             "custom_is_primary_uom": 1
+#         },
+#         "uom"
+#     )
 
-    return primary_uom
-
-
-
-#! Fetches and returns the Secondary UOM configured for the given Item from its UOM Conversion Detail
-
-@frappe.whitelist()
-def get_secondary_uom_from_item(item_code):
-    if not item_code:
-        return None
-
-    # Fetch primary UOM from Item UOM Conversion Detail
-    secondary_uom = frappe.db.get_value(
-        "UOM Conversion Detail",
-        {
-            "parent": item_code,
-            "parenttype": "Item",
-            "custom_is_secondary_uom": 1
-        },
-        "uom"
-    )
-
-    return secondary_uom
+#     return primary_uom
 
 
-#! Calculates and returns the Primary UOM quantity for a Work Order by converting the given WO quantity from Stock UOM using the Item’s Primary UOM conversion factor
 
-@frappe.whitelist()
-def get_primary_uom_qty(item_code, wo_qty):
-    """
-    Returns primary UOM quantity based on stock UOM and conversion factor
-    """
+# #! Fetches and returns the Secondary UOM configured for the given Item from its UOM Conversion Detail
 
-    if not item_code or not wo_qty:
-        return 0
+# @frappe.whitelist()
+# def get_secondary_uom_from_item(item_code):
+#     if not item_code:
+#         return None
 
-    # FIX: convert to float
-    wo_qty = float(wo_qty)
+#     # Fetch primary UOM from Item UOM Conversion Detail
+#     secondary_uom = frappe.db.get_value(
+#         "UOM Conversion Detail",
+#         {
+#             "parent": item_code,
+#             "parenttype": "Item",
+#             "custom_is_secondary_uom": 1
+#         },
+#         "uom"
+#     )
 
-    item = frappe.get_doc("Item", item_code)
-
-    stock_uom = item.stock_uom
-    primary_uom = None
-    conversion_factor = None
-
-    for row in item.uoms:
-        if row.custom_is_primary_uom:
-            primary_uom = row.uom
-            conversion_factor = row.conversion_factor
-            break
-
-    if not primary_uom:
-        frappe.throw(frappe._("Primary UOM not defined in Item Master"))
-
-    if stock_uom == primary_uom:
-        return wo_qty
-
-    if not conversion_factor:
-        frappe.throw(frappe._("Conversion factor missing for Primary UOM"))
-
-    return wo_qty / float(conversion_factor)
+#     return secondary_uom
 
 
-#! Creates Crate Master records for the given Work Order based on Secondary UOM quantity, setting manufacturing/expiry dates and linking each crate to the Work Order and production item
+# #! Calculates and returns the Primary UOM quantity for a Work Order by converting the given WO quantity from Stock UOM using the Item’s Primary UOM conversion factor
 
-@frappe.whitelist()
-def create_crate_master_for_secondary_uom(work_order, qty):
+# @frappe.whitelist()
+# def get_primary_uom_qty(item_code, wo_qty):
+#     """
+#     Returns primary UOM quantity based on stock UOM and conversion factor
+#     """
 
-    wo = frappe.get_doc("Work Order", work_order)
+#     if not item_code or not wo_qty:
+#         return 0
 
-    if not wo.production_item:
-        frappe.throw("Production Item not found in Work Order")
+#     # FIX: convert to float
+#     wo_qty = float(wo_qty)
 
-    if not wo.custom_posting_date:
-        frappe.throw("Posting Date is not set in Work Order")
+#     item = frappe.get_doc("Item", item_code)
 
-    shelf_life = frappe.db.get_value(
-        "Item",
-        wo.production_item,
-        "shelf_life_in_days"
-    ) or 0
+#     stock_uom = item.stock_uom
+#     primary_uom = None
+#     conversion_factor = None
 
-    manu_date = getdate(wo.custom_posting_date)
-    expiry_date = add_days(manu_date, shelf_life)
+#     for row in item.uoms:
+#         if row.custom_is_primary_uom:
+#             primary_uom = row.uom
+#             conversion_factor = row.conversion_factor
+#             break
 
-    for _ in range(int(qty)):
-        crate = frappe.new_doc("Crate Master")
+#     if not primary_uom:
+#         frappe.throw(frappe._("Primary UOM not defined in Item Master"))
 
-        crate.item = wo.production_item
-        crate.batch = wo.custom_batch_no
-        crate.manufacturing_date = manu_date
-        crate.expiry_date = expiry_date
-        crate.work_order = wo.name
-        crate.box_convesion_qty = wo.custom_printed_qty_for_secondary_uom
-        crate.status = "Empty"
+#     if stock_uom == primary_uom:
+#         return wo_qty
 
-        crate.insert(ignore_permissions=True)
+#     if not conversion_factor:
+#         frappe.throw(frappe._("Conversion factor missing for Primary UOM"))
 
-    frappe.db.commit()
+#     return wo_qty / float(conversion_factor)
+
+
+# #! Creates Crate Master records for the given Work Order based on Secondary UOM quantity, setting manufacturing/expiry dates and linking each crate to the Work Order and production item
+
+# @frappe.whitelist()
+# def create_crate_master_for_secondary_uom(work_order, qty):
+
+#     wo = frappe.get_doc("Work Order", work_order)
+
+#     if not wo.production_item:
+#         frappe.throw("Production Item not found in Work Order")
+
+#     if not wo.custom_posting_date:
+#         frappe.throw("Posting Date is not set in Work Order")
+
+#     shelf_life = frappe.db.get_value(
+#         "Item",
+#         wo.production_item,
+#         "shelf_life_in_days"
+#     ) or 0
+
+#     manu_date = getdate(wo.custom_posting_date)
+#     expiry_date = add_days(manu_date, shelf_life)
+
+#     for _ in range(int(qty)):
+#         crate = frappe.new_doc("Crate Master")
+
+#         crate.item = wo.production_item
+#         crate.batch = wo.custom_batch_no
+#         crate.manufacturing_date = manu_date
+#         crate.expiry_date = expiry_date
+#         crate.work_order = wo.name
+#         crate.box_convesion_qty = wo.custom_printed_qty_for_secondary_uom
+#         crate.status = "Empty"
+
+#         crate.insert(ignore_permissions=True)
+
+#     frappe.db.commit()
 
 
 
@@ -251,79 +251,79 @@ def create_crate_master_for_secondary_uom(work_order, qty):
 #     return wo_qty / difference
 
 
-@frappe.whitelist()
-def get_secondary_uom_qty(item_code, primary_qty):
-    """
-    Calculates secondary UOM qty using primary UOM qty and conversion factor ratio
-    """
+# @frappe.whitelist()
+# def get_secondary_uom_qty(item_code, primary_qty):
+#     """
+#     Calculates secondary UOM qty using primary UOM qty and conversion factor ratio
+#     """
 
-    if not item_code or not primary_qty:
-        return 0
+#     if not item_code or not primary_qty:
+#         return 0
 
-    primary_qty = float(primary_qty)
+#     primary_qty = float(primary_qty)
 
-    item = frappe.get_doc("Item", item_code)
+#     item = frappe.get_doc("Item", item_code)
 
-    primary_cf = None
-    secondary_cf = None
+#     primary_cf = None
+#     secondary_cf = None
 
-    for row in item.uoms:
-        if row.custom_is_primary_uom:
-            primary_cf = row.conversion_factor
-        if row.custom_is_secondary_uom:
-            secondary_cf = row.conversion_factor
+#     for row in item.uoms:
+#         if row.custom_is_primary_uom:
+#             primary_cf = row.conversion_factor
+#         if row.custom_is_secondary_uom:
+#             secondary_cf = row.conversion_factor
 
-    if not primary_cf or not secondary_cf:
-        frappe.throw(frappe._("Primary or Secondary UOM not defined in Item Master"))
+#     if not primary_cf or not secondary_cf:
+#         frappe.throw(frappe._("Primary or Secondary UOM not defined in Item Master"))
 
-    difference = float(secondary_cf) / float(primary_cf)
+#     difference = float(secondary_cf) / float(primary_cf)
 
-    if not difference:
-        frappe.throw(frappe._("Invalid UOM conversion factors"))
+#     if not difference:
+#         frappe.throw(frappe._("Invalid UOM conversion factors"))
 
-    # Now divide primary_qty by difference
-    return primary_qty / difference
+#     # Now divide primary_qty by difference
+#     return primary_qty / difference
 
 
 
-def create_batch_on_work_order_submit(doc, method):
-    if not doc.production_item:
-        return
+# def create_batch_on_work_order_submit(doc, method):
+#     if not doc.production_item:
+#         return
 
-    item = frappe.get_doc("Item", doc.production_item)
+#     item = frappe.get_doc("Item", doc.production_item)
 
-    # Check required conditions
-    if not (
-        item.has_batch_no
-        and item.create_new_batch
-        and item.batch_number_series
-    ):
-        return
-    manufacturing_date = doc.custom_posting_date
+#     # Check required conditions
+#     if not (
+#         item.has_batch_no
+#         and item.create_new_batch
+#         and item.batch_number_series
+#     ):
+#         return
+#     manufacturing_date = doc.custom_posting_date
 
-# Calculate expiry date using shelf life
-    expiry_date = None
-    if manufacturing_date and item.shelf_life_in_days:
-        expiry_date = add_days(manufacturing_date, item.shelf_life_in_days)
+# # Calculate expiry date using shelf life
+#     expiry_date = None
+#     if manufacturing_date and item.shelf_life_in_days:
+#         expiry_date = add_days(manufacturing_date, item.shelf_life_in_days)
 
-    # Generate batch ID from series
-    batch_id = make_autoname(item.batch_number_series)
+#     # Generate batch ID from series
+#     batch_id = make_autoname(item.batch_number_series)
 
-    # Create Batch
-    batch = frappe.get_doc({
-        "doctype": "Batch",
-        "batch_id": batch_id,
-        "item": doc.production_item,
-        "manufacturing_date": manufacturing_date,
-        "expiry_date": expiry_date ,
-        "reference_doctype": "Work Order",
-        "reference_name": doc.name,
-        "qty_to_produce" : doc.qty,
-        "produced_qty": doc.produced_qty
-    })
+#     # Create Batch
+#     batch = frappe.get_doc({
+#         "doctype": "Batch",
+#         "batch_id": batch_id,
+#         "item": doc.production_item,
+#         "manufacturing_date": manufacturing_date,
+#         "expiry_date": expiry_date ,
+#         "reference_doctype": "Work Order",
+#         "reference_name": doc.name,
+#         "qty_to_produce" : doc.qty,
+#         "produced_qty": doc.produced_qty
+#     })
 
-    batch.insert(ignore_permissions=True)
+#     batch.insert(ignore_permissions=True)
 
-    # Optional: store batch in Work Order
-    if hasattr(doc, "custom_batch_no"):
-        doc.db_set("custom_batch_no", batch.name)
+#     # Optional: store batch in Work Order
+#     if hasattr(doc, "custom_batch_no"):
+#         doc.db_set("custom_batch_no", batch.name)
