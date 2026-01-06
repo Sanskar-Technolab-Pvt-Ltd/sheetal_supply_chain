@@ -1,3 +1,6 @@
+// Barcode Logic 
+
+
 frappe.ui.form.on('Item', {
     validate(frm) {
         validate_unique_uoms(frm);

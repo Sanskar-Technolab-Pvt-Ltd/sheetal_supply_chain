@@ -199,7 +199,7 @@ doc_events = {
 					"sheetal_supply_chain.py.work_order.set_work_order_totals",
 					],
   
-		"on_submit": "sheetal_supply_chain.py.work_order.create_batch_on_work_order_submit",
+		# "on_submit": "sheetal_supply_chain.py.work_order.create_batch_on_work_order_submit",
 
 		
 	},
