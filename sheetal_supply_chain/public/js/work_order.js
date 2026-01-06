@@ -4,23 +4,30 @@ frappe.ui.form.on("Work Order", {
             setTimeout(() => {
                 fetch_primary_uom(frm);
                 fetch_secondary_uom(frm);
-                fetch_primary_uom_qty(frm);
-                fetch_secondary_uom_qty(frm);
+                // fetch_primary_uom_qty(frm);
+                fetch_primary_secondary_uom_qty(frm);
 
             }, 100);
         }
     },
     qty(frm) {
-        fetch_primary_uom_qty(frm);
-        fetch_secondary_uom_qty(frm);
+        fetch_primary_secondary_uom_qty(frm);
 
     },
     validate(frm) {
         fetch_primary_uom(frm);
         fetch_secondary_uom(frm);
-        fetch_primary_uom_qty(frm);
-        fetch_secondary_uom_qty(frm);
+        // fetch_primary_uom_qty(frm);
+        fetch_primary_secondary_uom_qty(frm);
 
+    },
+    onload(frm) {
+        if (!frm.doc.custom_posting_date) {
+            frm.set_value(
+                "custom_posting_date",
+                frappe.datetime.now_date()
+            );
+        }
     },
     custom_print_qr_button_for_primary_uom: function (frm) {
 
@@ -56,7 +63,10 @@ frappe.ui.form.on("Work Order", {
                 frm.set_value(
                     'custom_printed_qty_for_primary_uom',
                     values.primary_uom_qty
-                );
+                ).then(() => {
+                    // Auto-save the document
+                    frm.save();
+                });
 
                 d.hide();
             }
@@ -103,7 +113,10 @@ frappe.ui.form.on("Work Order", {
                 frm.set_value(
                     'custom_printed_qty_for_secondary_uom',
                     values.secondary_uom_qty
-                );
+                ).then(() => {
+                    // Auto-save the document
+                    frm.save();
+                });;
 
                 // Call server to create Crate Master records
                 frappe.call({
@@ -259,35 +272,70 @@ function fetch_secondary_uom(frm) {
 
 // Calculates and sets the Primary UOM quantity in the Work Order by converting the entered WO quantity using Item UOM conversion rules
 
-function fetch_primary_uom_qty(frm) {
+// function fetch_primary_uom_qty(frm) {
 
+//     if (!frm.doc.production_item || !frm.doc.qty) {
+//         frm.set_value("custom_primary_uom_qty", 0);
+//         return;
+//     }
+
+//     frappe.call({
+//         method: "sheetal_supply_chain.py.work_order.get_primary_uom_qty",
+//         args: {
+//             item_code: frm.doc.production_item,
+//             wo_qty: frm.doc.qty
+//         },
+//         callback: function (r) {
+//             if (r.message !== undefined) {
+//                 frm.set_value("custom_primary_uom_qty", r.message);
+//             }
+//         }
+//     });
+// }
+
+
+// function fetch_secondary_uom_qty(frm) {
+//     if (!frm.doc.production_item || !frm.doc.qty) {
+//         frm.set_value("custom_secondary_uom_qty", 0);
+//         return;
+//     }
+
+//     // Step 1: Fetch primary UOM qty from server
+//     frappe.call({
+//         method: "sheetal_supply_chain.py.work_order.get_primary_uom_qty",
+//         args: {
+//             item_code: frm.doc.production_item,
+//             wo_qty: frm.doc.qty
+//         },
+//         callback: function (r_primary) {
+//             let primary_qty = r_primary.message || 0;
+//             console.log("Prinmary qty",primary_qty)
+//             // Step 2: Calculate secondary UOM qty using server method
+//             frappe.call({
+//                 method: "sheetal_supply_chain.py.work_order.get_secondary_uom_qty",
+//                 args: {
+//                     item_code: frm.doc.production_item,
+//                     primary_qty: primary_qty
+//                 },
+//                 callback: function (r_secondary) {
+//                     if (r_secondary.message !== undefined) {
+//                         frm.set_value("custom_secondary_uom_qty", r_secondary.message);
+
+//                     }
+//                 }
+//             });
+//         }
+//     });
+// }
+
+function fetch_primary_secondary_uom_qty(frm) {
     if (!frm.doc.production_item || !frm.doc.qty) {
         frm.set_value("custom_primary_uom_qty", 0);
-        return;
-    }
-
-    frappe.call({
-        method: "sheetal_supply_chain.py.work_order.get_primary_uom_qty",
-        args: {
-            item_code: frm.doc.production_item,
-            wo_qty: frm.doc.qty
-        },
-        callback: function (r) {
-            if (r.message !== undefined) {
-                frm.set_value("custom_primary_uom_qty", r.message);
-            }
-        }
-    });
-}
-
-
-function fetch_secondary_uom_qty(frm) {
-    if (!frm.doc.production_item || !frm.doc.qty) {
         frm.set_value("custom_secondary_uom_qty", 0);
         return;
     }
 
-    // Step 1: Fetch primary UOM qty from server
+    // Step 1: Fetch primary qty from backend
     frappe.call({
         method: "sheetal_supply_chain.py.work_order.get_primary_uom_qty",
         args: {
@@ -296,8 +344,8 @@ function fetch_secondary_uom_qty(frm) {
         },
         callback: function (r_primary) {
             let primary_qty = r_primary.message || 0;
-
-            // Step 2: Calculate secondary UOM qty using server method
+            
+            // Step 2: Fetch secondary qty
             frappe.call({
                 method: "sheetal_supply_chain.py.work_order.get_secondary_uom_qty",
                 args: {
@@ -306,11 +354,14 @@ function fetch_secondary_uom_qty(frm) {
                 },
                 callback: function (r_secondary) {
                     if (r_secondary.message !== undefined) {
-                        frm.set_value("custom_secondary_uom_qty", r_secondary.message);
+                        frm.set_value(
+                            "custom_secondary_uom_qty",
+                            r_secondary.message
+                        );
+                        frm.set_value("custom_primary_uom_qty", primary_qty);
                     }
                 }
             });
         }
     });
 }
-
