@@ -1,12 +1,12 @@
 import frappe
 from frappe.utils import flt
-import frappe
 from frappe.utils import add_days, getdate
-from frappe.utils import add_days, getdate
+from frappe.model.naming import make_autoname
 
 
 #! Fetch FAT & SNF percentages from BOM items and calculate corresponding FAT/SNF kg values for Work Order required items based on required quantity
 def fetch_bom_fat_snf_for_work_order(doc, method=None):
+    
     
     if not doc.is_new():
         return
@@ -283,3 +283,47 @@ def get_secondary_uom_qty(item_code, primary_qty):
 
     # Now divide primary_qty by difference
     return primary_qty / difference
+
+
+
+def create_batch_on_work_order_submit(doc, method):
+    if not doc.production_item:
+        return
+
+    item = frappe.get_doc("Item", doc.production_item)
+
+    # Check required conditions
+    if not (
+        item.has_batch_no
+        and item.create_new_batch
+        and item.batch_number_series
+    ):
+        return
+    manufacturing_date = doc.custom_posting_date
+
+# Calculate expiry date using shelf life
+    expiry_date = None
+    if manufacturing_date and item.shelf_life_in_days:
+        expiry_date = add_days(manufacturing_date, item.shelf_life_in_days)
+
+    # Generate batch ID from series
+    batch_id = make_autoname(item.batch_number_series)
+
+    # Create Batch
+    batch = frappe.get_doc({
+        "doctype": "Batch",
+        "batch_id": batch_id,
+        "item": doc.production_item,
+        "manufacturing_date": manufacturing_date,
+        "expiry_date": expiry_date ,
+        "reference_doctype": "Work Order",
+        "reference_name": doc.name,
+        "qty_to_produce" : doc.qty,
+        "produced_qty": doc.produced_qty
+    })
+
+    batch.insert(ignore_permissions=True)
+
+    # Optional: store batch in Work Order
+    if hasattr(doc, "custom_batch_no"):
+        doc.db_set("custom_batch_no", batch.name)

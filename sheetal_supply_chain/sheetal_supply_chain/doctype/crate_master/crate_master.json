@@ -9,10 +9,14 @@
   "amended_from",
   "item",
   "batch",
+  "scan_barcode",
+  "box_conversion_qty",
+  "allow_manual_box_qty",
+  "actual_box_qty",
+  "column_break_kggs",
+  "work_order",
   "manufacturing_date",
   "expiry_date",
-  "work_order",
-  "box_conversion_qty",
   "status"
  ],
  "fields": [
@@ -68,13 +72,34 @@
    "fieldtype": "Select",
    "label": "Status",
    "options": "Empty\nFilled\nPartially Filled"
+  },
+  {
+   "fieldname": "scan_barcode",
+   "fieldtype": "Data",
+   "label": "Scan Barcode",
+   "options": "Barcode"
+  },
+  {
+   "fieldname": "actual_box_qty",
+   "fieldtype": "Float",
+   "label": "Actual Box Qty"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_manual_box_qty",
+   "fieldtype": "Check",
+   "label": "Allow Manual Box Qty"
+  },
+  {
+   "fieldname": "column_break_kggs",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-01-01 14:32:10.923695",
+ "modified": "2026-01-02 11:09:19.544761",
  "modified_by": "Administrator",
  "module": "Sheetal Supply Chain",
  "name": "Crate Master",
